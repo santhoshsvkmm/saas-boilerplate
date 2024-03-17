@@ -1,9 +1,9 @@
 const db = require("../../models");
 const User = db.user;
-const UserPersonalInfo = db.userPersonalInfo
-const UserFinancialInfo = db.userFinancialInfo
+const UserPersonalInfo = db.userPersonalInfo;
+const UserFinancialInfo = db.userFinancialInfo;
+const bcrypt = require('bcrypt');
 
-const bcrypt = require('bcrypt')
 
 // Create and Save a new User
 exports.create = (req, res) => {
@@ -22,11 +22,15 @@ exports.create = (req, res) => {
 
     // Create a User
     const user = {
+        firstname:req.body.firstname,
+        lastname:req.body.lastname,
+        is_active:true,
+        department_id:null,
         username: req.body.username,
+        email: req.body.email,
         password: hash,
         fullName: req.body.fullname,
-        role: "ROLE_EMPLOYEE",
-        active: false
+        role: "ROLE_ADMIN",
     };
 
     // Save User in the database

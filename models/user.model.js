@@ -4,7 +4,18 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
+      },
+      email:{
+        type: Sequelize.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: true
+        },
+        unique: {
+          args: 'email',
+          msg: 'This email is already taken!'
+        }
       },
       username: {
         type: Sequelize.STRING,
@@ -24,7 +35,11 @@ module.exports = (sequelize, Sequelize) => {
           notEmpty: true
         }
       },
-      fullName: {
+      firstname: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      lastname: {
         type: Sequelize.STRING,
         allowNull: false
       },
@@ -33,7 +48,7 @@ module.exports = (sequelize, Sequelize) => {
         values: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_EMPLOYEE'],
         allowNull: false
       },
-      active: {
+      is_active: {
           type: Sequelize.BOOLEAN,
           allowNull: false,
           validate: {

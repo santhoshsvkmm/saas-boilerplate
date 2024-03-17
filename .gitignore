@@ -1,7 +1,9 @@
-AdminLTE-3.0.4
+#################  
+## npm
+#################
 
-.env
-
+npm-debug.log
+node_modules/
+!/node_modules/
+!src/node_modules/
 node_modules
-
-client/node_modules

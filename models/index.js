@@ -20,6 +20,10 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 // Models
+db.organisation = require("./organisation.model")(sequelize, Sequelize);
+db.organisationDetails = require("./organisationDetails.model.js")(sequelize, Sequelize);
+db.roles = require("./roles.model.js")(sequelize, Sequelize);
+db.feature = require("./feature.model.js")(sequelize, Sequelize);
 db.user = require("./user.model")(sequelize, Sequelize);
 db.userPersonalInfo = require("./userPersonalInfo.model")(sequelize, Sequelize)
 db.userFinancialInfo = require("./userFinancialInfo.model")(sequelize, Sequelize)
@@ -30,6 +34,25 @@ db.job = require("./job.model")(sequelize, Sequelize);
 db.application = require("./application.model")(sequelize, Sequelize);
 db.payment = require("./payment.model")(sequelize, Sequelize);
 db.expense = require("./expense.model")(sequelize, Sequelize);
+
+
+
+//organisation Associations
+db.organisation.hasOne(db.organisationDetails,{foreignKey:{allowNull:false}})
+db.organisation.hasMany(db.roles,{foreginKey:{allowNull:false}})
+db.organisation.hasMany(db.user,{foreginKey:{allowNull:false}})
+db.organisation.hasMany(db.feature,{foreginKey:{allowNull:false}})
+
+
+
+//roles Associations
+db.roles.hasMany(db.user,{foreginKey:{allowNull:false}});
+
+//feature Associations
+db.feature.hasMany(db.roles,{foreginKey:{allowNull:false}})
+
+//branch Associations
+
 
 // User Associations
 db.user.hasOne(db.userPersonalInfo, {foreignKey: {allowNull: false}})
