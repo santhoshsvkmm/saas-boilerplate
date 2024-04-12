@@ -1,18 +1,23 @@
 var createError = require("http-errors");
+const helmet = require('helmet');
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var withAuth = require("./withAuth");
+const cors = require('cors');
 
 const db = require("./models");
 require("dotenv").config();
+const rateLimitMiddleware = require("./middleware/rateLimiter.middleware")
 
 var api = require("./routes/api");
 var login = require("./routes/login/login.routes");
 var register = require("./routes/register/register.routes");
 
 var app = express();
+
+app.use(helmet());
 
 // global.__basedir = __dirname;
 
@@ -24,6 +29,8 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+// Apply the rate limiter to all routes
+app.use(rateLimitMiddleware);
 // app.use(express.static(path.join(__dirname, "public")));
 
 // var corsOptions = {
@@ -36,6 +43,8 @@ db.sequelize.sync({ alter: true });
 // db.sequelize.sync({ force: true }).then(() => {
 //   console.log("Drop and re-sync db.");
 // });
+app.use(cors());
+
 
 app.use("/api", api);
 app.use("/login", login);

@@ -30,7 +30,7 @@ module.exports = (sequelize, Sequelize) => {
       },
       password: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
         validate: {
           notEmpty: true
         }
@@ -48,7 +48,7 @@ module.exports = (sequelize, Sequelize) => {
         values: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_EMPLOYEE'],
         allowNull: false
       },
-      is_active: {
+      isActive: {
           type: Sequelize.BOOLEAN,
           allowNull: false,
           validate: {

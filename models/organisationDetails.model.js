@@ -8,20 +8,20 @@ module.exports = (sequelize, Sequelize) => {
       },
       address: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       country: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       city: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       state: {
         type: Sequelize.STRING,
-        allowNull: false
-      }
+        allowNull: true
+      } 
     }, {
         timestamps: true,
         underscored: true,

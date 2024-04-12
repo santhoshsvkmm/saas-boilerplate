@@ -3,6 +3,10 @@ const User = db.user;
 const UserPersonalInfo = db.userPersonalInfo;
 const UserFinancialInfo = db.userFinancialInfo;
 const bcrypt = require('bcrypt');
+const Organisation = db.organisation;
+const OrganisationDetails = db.organisationDetails;
+const sendEmail = require("../../middleware/email.middleware");
+const organisationVerfication = require('../../emailTemplates/organisationVerfication')
 
 
 // Create and Save a new User
@@ -35,8 +39,8 @@ exports.create = (req, res) => {
 
     // Save User in the database
     User.findOne({ where: { username: user.username } })
-        .then(userExists => {
-            if (!userExists) {
+        .then(organisationExists => {
+            if (!organisationExists) {
                 User.create(user)
                     .then(data => {
                         let userData = {
@@ -78,3 +82,61 @@ exports.create = (req, res) => {
             }
         })
 };
+
+
+exports.createOrganisation = (req,res) => {
+    if (!req.body) {
+        res.status(400).send({
+            message: "Content can not be empty!"
+        });
+        return;
+    }
+
+
+
+    const organisation = {
+         organisation_name:req.body.organisation_name,
+         is_active:true,
+         is_verified:false,
+    }
+
+
+    User.findOne({ where: { organisation_name : organisation.organisation_name } })
+    .then(organisationExists => {
+        if (!organisationExists) {
+            Organisation.create(organisation)
+                .then(data => {
+                    let organisationData = {
+                        organisation_id: data.dataValues.id
+                    }
+                    OrganisationDetails.create(organisationData)
+                    .then(data => {
+
+
+                            sendEmail(req.body.email,"Organisation Verification",organisationVerfication)
+                            res.send(data);
+
+                     }) .catch(err => {
+                        console.log(err)
+                        res.status(500).send({
+                            message:
+                                err.message || "Some error occurred while creating the Organisation."
+                        }); 
+                    });
+                })
+                .catch(err => {
+                    res.status(500).send({
+                        message:
+                            err.message || "Some error occurred while creating the Organisation."
+                    });
+                });
+        } else {
+            res.status(403).send({
+                message: "Organisation already exists"
+            })
+        }
+    })
+
+
+
+}

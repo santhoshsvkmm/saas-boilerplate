@@ -20,6 +20,13 @@ module.exports = (sequelize, Sequelize) => {
           validate: {
             notEmpty: true
           }
+      },
+      organisation_id:{
+        type: Sequelize.INTEGER,
+          allowNull: true,
+          validate: {
+            notEmpty: true
+          }
       }
     }, {
         timestamps: true,

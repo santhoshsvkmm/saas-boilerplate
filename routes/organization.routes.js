@@ -3,21 +3,21 @@ var router = express.Router();
 
 const withAuth = require('../withAuth');
 
-const organization = require("../controllers/organization.controller.js");
+const organisation = require("../controllers/organisation.controller.js");
 
 // Create a new Organization
-router.post('/', organization.create, withAuth.verifyToken);
+router.post('/', organisation.create);
 
 //Retrieve a single Organization with an id
-router.get('/:id', withAuth.verifyToken, organization.findOne);
+router.get('/:id', withAuth.verifyToken, organisation.findOne);
 
 // Update an Organization with id
-router.put('/:id', withAuth.verifyToken, withAuth.withRoleAdmin, withAuth.verifyToken, organization.update);
+router.put('/:id', withAuth.verifyToken, withAuth.withRoleAdmin, withAuth.verifyToken, organisation.update);
 
 // Delete an Organization with id
-router.delete('/:id', withAuth.verifyToken, withAuth.withRoleAdmin, organization.delete);
+router.delete('/:id', withAuth.verifyToken, withAuth.withRoleAdmin, organisation.delete);
 
 // Delete all Organizations
-router.delete('/', withAuth.verifyToken, withAuth.withRoleAdmin, organization.deleteAll);
+router.delete('/', withAuth.verifyToken, withAuth.withRoleAdmin, organisation.deleteAll);
 
 module.exports = router;

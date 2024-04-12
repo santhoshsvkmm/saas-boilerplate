@@ -7,7 +7,23 @@ const Job = db.job
 const Payment = db.payment;
 const Op = db.Sequelize.Op;
 
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+
+
+exports.createUser = (details,res) => {
+    User.findOne({ 
+        where: { username: details.username } 
+    })
+        .then(userExists => {
+            if (!userExists) {
+                User.create(details)
+                    .then(data => {
+                        res.send(data);
+                    })
+            } 
+        })
+}
+
 
 // Create and Save a new User
 exports.create = (req, res) => {
@@ -23,8 +39,6 @@ exports.create = (req, res) => {
     if(req.body.password) {
         hash = bcrypt.hashSync(req.body.password.toString(), 10);
     }
-
-    console.log(req.body)
     // Create a User
     const user = {
         username: req.body.username,
@@ -34,29 +48,9 @@ exports.create = (req, res) => {
         active: true,
         departmentId: req.body.departmentId
     };
-
+    createUser(user,res)
     // Save User in the database
-    User.findOne({ 
-        where: { username: user.username } 
-    })
-        .then(userExists => {
-            if (!userExists) {
-                User.create(user)
-                    .then(data => {
-                        res.send(data);
-                    })
-                    .catch(err => {
-                        res.status(500).send({
-                            message:
-                                err.message || "Some error occurred while creating the User."
-                        });
-                    });
-            } else {
-                res.status(403).send({
-                    message: "Username already exists"
-                })
-            }
-        })
+  
 };
 
 // Retrieve all Users from the database.
