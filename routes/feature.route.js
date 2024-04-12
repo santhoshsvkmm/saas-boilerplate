@@ -4,7 +4,7 @@ var validate = require('../middleware/validate.middleware.js');
 const {featureValidation}= require("../validationSchemas/feature.validation.js")
 
 // const withAuth = require('../withAuth')
-const  feature = require('../controllers/register/feature.controller.js')
+const  feature = require('../controllers/feature.controller.js')
 
 
 router.post('/createfeature',validate(featureValidation), feature.createFeatures);

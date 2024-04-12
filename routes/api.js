@@ -16,7 +16,7 @@ var userMessageRouter = require('./userMessage.routes')
 var userPersonalEventRouter = require('./userPersonalEvent.routes')
 var userPersonalInformationRouter = require('./userPersonalInformation.routes')
 var userFinancialInformationRouter = require('./userFinacnialInformation.routes');
-var rolesRouter = require("./roles.route");
+var rolesRouter = require("./roles.routes");
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
