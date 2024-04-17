@@ -1,12 +1,16 @@
 module.exports = (sequelize, Sequelize) => {
-    const Application = sequelize.define("application", {
+    const Project = sequelize.define("project", {
         id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
             primaryKey: true,
             allowNull: false
         },
-        reason: {
+        name:{
+            type: Sequelize.STRING,
+            allowNull: true
+        },
+        description: {
             type: Sequelize.STRING,
             allowNull: true
         },
@@ -18,21 +22,24 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.DATE,
             allowNull: false
         },
-        status: {
-            type: Sequelize.ENUM,
-            values: ['Approved', 'Rejected', 'Pending'],
+        is_Active: {
+            type: Sequelize.BOOLEAN,
             allowNull: false
         },
-        type: {
+        project_type: {
             type: Sequelize.ENUM,
-            values: ['Normal', 'Student', 'Illness', 'Marriage'],
+            values: ['construction','software'],
+            allowNull: false
+        },
+        organisation_id:{
+            type: Sequelize.INTEGER,
             allowNull: false
         }
     }, {
-        timestamps: false,
+        timestamps: true,
         underscored: true,
         freezeTableName: true,
     });
 
-    return Application;
+    return Project;
 };

@@ -17,7 +17,25 @@ module.exports = (sequelize, Sequelize) => {
       endDate: {
         type: Sequelize.DATE,
         allowNull: false
-      }
+      },
+      department_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
+      branch_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      organisation_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
     }, {
         timestamps: false,
         underscored: true,

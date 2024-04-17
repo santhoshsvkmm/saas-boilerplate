@@ -1,7 +1,6 @@
 module.exports = (sequelize, Sequelize) => {
-  const Skills = sequelize.define(
-    "skills",
-
+  const ProjectLocationInfo = sequelize.define(
+    "project_location_info",
     {
       id: {
         type: Sequelize.INTEGER,
@@ -9,19 +8,18 @@ module.exports = (sequelize, Sequelize) => {
         primaryKey: true,
         allowNull: false,
       },
-      skillname: {
+      name: {
         type: Sequelize.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+        allowNull: true,
       },
-      isActive: {
-        type: Sequelize.BOOLEAN,
+      version_status: {
+        type: Sequelize.ENUM,
+        values: ["inplanning", "inprocess", "onhold", "completed"],
         allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+      },
+      project_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
       },
     },
     {
@@ -31,5 +29,5 @@ module.exports = (sequelize, Sequelize) => {
     }
   );
 
-  return Skills;
+  return ProjectLocationInfo;
 };

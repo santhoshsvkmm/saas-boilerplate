@@ -6,7 +6,7 @@ const roleValidation = {
     description: Joi.string().required(),
     is_active: Joi.boolean().required(),
     organisation_id: Joi.number().required(),
-    feature_id: Joi.array().min(1).items(Joi.number()).required(),
+    feature_ids: Joi.array().min(1).items(Joi.number()).required(),
   }),
 };
 

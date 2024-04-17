@@ -24,7 +24,6 @@ exports.createUser = (details,res) => {
         })
 }
 
-
 // Create and Save a new User
 exports.create = (req, res) => {
     // Validate request

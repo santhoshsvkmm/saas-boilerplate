@@ -24,7 +24,7 @@ module.exports = (sequelize, Sequelize) => {
       }
     );
   
-    return Skills
+    return SkillTypes 
     ;
   };
   

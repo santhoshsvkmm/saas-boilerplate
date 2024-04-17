@@ -25,7 +25,6 @@ const checkRoleExists = (role, res) => {
 
 
 const createNewRole = (role, res) => {
-    console.log("-----role------",role)
     Roles.create(role)
         .then(data => {
             const roleData = {
@@ -53,12 +52,16 @@ const createRoles = (req, res) => {
         });
     }
 
+    if (req.body.feature_ids.length < 0 ) {
+        return res.status(400).json({ error: `Minimum one feature is required `})
+    }
+
     const role = {
         role_name: req.body.role_name,
         description: req.body.description,
         is_active: req.body.is_active,
         organisation_id: req.body.organisation_id,
-        feature_id:req.body.feature_id
+        feature_ids:req.body.feature_ids
     }
 
     checkRoleExists(role, res);

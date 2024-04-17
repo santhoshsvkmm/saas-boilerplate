@@ -1,11 +1,13 @@
 const db = require("../models");
 const Organisation = db.organisation;
 const OrganisationInfo = db.organisationDetails;
-const { createUser } = require("./user.controller");
 const User = db.user;
 const sendEmail = require("../middleware/email.middleware");
 const organisationVerfication = require("../emailTemplates/organisationVerfication");
-const  {generateJwtSecretKey,generateUrlToken} = require ("../utils/token");
+const  {generateUrlToken,decodeToken} = require ("../utils/token");
+require('dotenv').config()
+const bcrypt = require("bcrypt");
+
 
 
 const createOrganization = async (organisation, userdetails, userPersonalInfo, res) => {
@@ -24,9 +26,10 @@ const createOrganization = async (organisation, userdetails, userPersonalInfo, r
        action:'organisationVerification'
     }
     const expiresIn = '1h';
-    const urlToken = generateUrlToken(payload, generateJwtSecretKey(32), expiresIn);
-    await sendEmail(userdetails.email,"Organisation Verification",organisationVerfication(urlToken));
-    res.cookie('token', token, { httpOnly: true });
+    const secertKey = process.env.JWT_SECRET_KEY
+    const urlToken = generateUrlToken(payload,secertKey , expiresIn);
+    await sendEmail(userdetails.email,"Organisation Verification",organisationVerfication(urlToken,createdOrganization));
+    res.cookie('token', urlToken, { httpOnly: true });
     res.send({ data: createdOrganization, message: "Organisation is Created Successfully" });
   } catch (error) {
     res.status(500).send({ message: error.message || "Some error occurred while creating the Organization" });
@@ -71,7 +74,7 @@ exports.create = (req, res) => {
 };
 
 
-exports.verifyOrganisation = (req,res) => {
+exports.verifyOrganisation = async (req,res) => {
    if(!req.body) {
     res.status(400).send({
       message: "Content can not be empty!",
@@ -82,25 +85,20 @@ exports.verifyOrganisation = (req,res) => {
    if(req.body.password) {
     hash = bcrypt.hashSync(req.body.password.toString(), 10);
    }   
-
-  const decodedValue = decodeToken(req.body.token,)
-   const verificationPayload =  {
-      token:req.body.token,
-      isVerified:true,
-      password:hash
-   }
-
+  const secertKey = process.env.JWT_SECRET_KEY;
+  const decodedValue = decodeToken(req.body.token,secertKey);
    try {
-  
-    const token = ""
-
-
-
+    const {id} = decodedValue;
+    const existingOrganization = await Organisation.findOne({ where: { id: id } });
+    const {dataValues} = existingOrganization;
+    if (existingOrganization) {
+      await User.update({password:hash}, {where: {organisation_id:id,role:"ROLE_ADMIN"}});
+      await Organisation.update({...dataValues,isVerified:true},{where: {id: id}});
+      res.send({ message: "Organisation is Verified  Successfully" });
+    }
    } catch (error) {
        res.status(500).send({ message: error.message || "Some error occurred while verification the Organization" });
    }
-
-
 }
 
 // Retrieve all organisations from the database.

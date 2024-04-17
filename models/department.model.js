@@ -12,9 +12,23 @@ module.exports = (sequelize, Sequelize) => {
             validate: {
                 notEmpty: true
             }
+        },
+        branch_id:{
+            type: Sequelize.INTEGER,
+            allowNull: true,
+            validate: {
+                notEmpty: true
+            }
+        },
+        organisation_id: {
+            type: Sequelize.INTEGER,
+            allowNull: true,
+            validate: {
+                notEmpty: true
+            }
         }
     }, {
-        timestamps: false,
+        timestamps: true,
         underscored: true,
         freezeTableName: true
     });
