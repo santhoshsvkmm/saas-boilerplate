@@ -11,7 +11,7 @@
   <p>
   # ERP
     This Enterprise Resource Planning System was made using 
-    <a href="https://github.com/facebook/react#react-----" target="_blank">React</a> amongst other libraries on the frontend and 
+    <a href="https://github.com/facebook/react#react-----" target="_blank">Express.js</a> amongst other libraries and 
     <a href="https://nodejs.org/en/" target="_blank">Node.js</a> as well as 
     <a href="https://expressjs.com/" target="_blank">Express</a> on the backend. 
     As for the database, I used 
