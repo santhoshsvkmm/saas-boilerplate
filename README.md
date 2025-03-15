@@ -1,103 +1,107 @@
-Strix ERP
-Overview
-Strix ERP is a Node.js module designed for enterprise resource planning (ERP) applications. It provides a robust platform for managing business processes, offering features like authentication, security, rate limiting, email sending, job scheduling, logging, data validation, and more.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strix ERP - README</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; }
+    h1, h2, h3 { color: #333; }
+    code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+    pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow: auto; }
+    ul { list-style-type: disc; margin-left: 20px; }
+  </style>
+</head>
+<body>
 
-Features
-ERP: Comprehensive ERP functionalities for business management.
+<h1>Strix ERP</h1>
 
-Security: Implements security best practices using Helmet and JWT authentication.
+<h2>Overview</h2>
+<p>Strix ERP is a Node.js module designed for enterprise resource planning (ERP) applications. It provides a robust platform for managing business processes, offering features like authentication, security, rate limiting, email sending, job scheduling, logging, data validation, and more.</p>
 
-Rate Limiting: Protects against excessive requests with express-rate-limit and Redis.
+<h2>Features</h2>
+<ul>
+  <li><strong>ERP:</strong> Comprehensive ERP functionalities for business management.</li>
+  <li><strong>Security:</strong> Implements security best practices using Helmet and JWT authentication.</li>
+  <li><strong>Rate Limiting:</strong> Protects against excessive requests with express-rate-limit and Redis.</li>
+  <li><strong>Email Sending:</strong> Integrated email capabilities using Nodemailer.</li>
+  <li><strong>Job Scheduling:</strong> Scheduled tasks with node-cron.</li>
+  <li><strong>Logging:</strong> Advanced logging using Winston.</li>
+  <li><strong>Data Validation:</strong> Ensures data integrity using Joi and Yup.</li>
+  <li><strong>File Upload:</strong> Supports file uploads with Multer.</li>
+</ul>
 
-Email Sending: Integrated email capabilities using Nodemailer.
+<h2>Getting Started</h2>
 
-Job Scheduling: Scheduled tasks with node-cron.
+<h3>Prerequisites</h3>
+<ul>
+  <li>Node.js</li>
+  <li>npm (Node Package Manager)</li>
+  <li>MySQL database</li>
+</ul>
 
-Logging: Advanced logging using Winston.
+<h3>Installation</h3>
+<ol>
+  <li>Clone the repository:
+    <pre><code>git clone &lt;repository-url&gt;</code></pre>
+  </li>
+  <li>Navigate to the project directory:
+    <pre><code>cd strix-erp</code></pre>
+  </li>
+  <li>Install server-side dependencies:
+    <pre><code>npm install</code></pre>
+  </li>
+  <li>Install client-side dependencies:
+    <pre><code>npm run client-install</code></pre>
+  </li>
+</ol>
 
-Data Validation: Ensures data integrity using Joi and Yup.
+<h3>Running the Application</h3>
+<ul>
+  <li><strong>Start the Server:</strong>
+    <pre><code>npm run server</code></pre>
+  </li>
+  <li><strong>Start the Client:</strong>
+    <pre><code>npm run client</code></pre>
+  </li>
+  <li><strong>Development Mode:</strong>
+    Run both server and client concurrently:
+    <pre><code>npm run dev</code></pre>
+  </li>
+</ul>
 
-File Upload: Supports file uploads with Multer.
+<h3>Configuration</h3>
+<p>Create a <code>.env</code> file in the root directory and configure your environment variables for database connection, JWT secret, etc.</p>
 
-Getting Started
-Prerequisites
-Node.js
+<h2>Scripts</h2>
+<ul>
+  <li><code>client-install</code>: Installs client-side dependencies.</li>
+  <li><code>start</code>: Starts the application using the <code>node</code> command.</li>
+  <li><code>server</code>: Starts the server with <code>nodemon</code> for automatic restarts.</li>
+  <li><code>client</code>: Starts the client-side application.</li>
+  <li><code>dev</code>: Runs both server and client concurrently for development.</li>
+</ul>
 
-npm (Node Package Manager)
+<h2>Technologies Used</h2>
+<ul>
+  <li><strong>Express:</strong> Fast, unopinionated, minimalist web framework for Node.js.</li>
+  <li><strong>Sequelize:</strong> Promise-based Node.js ORM for MySQL.</li>
+  <li><strong>JWT:</strong> JSON Web Token for secure authentication.</li>
+  <li><strong>Nodemailer:</strong> Easy-to-use library for sending emails.</li>
+  <li><strong>Node-cron:</strong> Cron for Node.js.</li>
+  <li><strong>Winston:</strong> Versatile logging library.</li>
+  <li><strong>Joi and Yup:</strong> Data validation libraries.</li>
+</ul>
 
-MySQL database
+<h2>License</h2>
+<p>This project is licensed under the ISC License.</p>
 
-Installation
-Clone the repository:
+<h2>Author</h2>
+<ul>
+  <li><strong>Santhosh Sivakumar</strong></li>
+  <li>Contact: <a href="mailto:santhoshsivakumar077@gmail.com">santhoshsivakumar077@gmail.com</a></li>
+</ul>
+<p>For any questions or collaboration, feel free to contact me.</p>
 
-bash
-Copy Code
-git clone <repository-url>
-Navigate to the project directory:
-
-bash
-Copy Code
-cd strix-erp
-Install server-side dependencies:
-
-bash
-Copy Code
-npm install
-Install client-side dependencies:
-
-bash
-Copy Code
-npm run client-install
-Running the Application
-Start the Server:
-
-bash
-Copy Code
-npm run server
-Start the Client:
-
-bash
-Copy Code
-npm run client
-Development Mode:
-Run both server and client concurrently:
-
-bash
-Copy Code
-npm run dev
-Configuration
-Create a .env file in the root directory and configure your environment variables for database connection, JWT secret, etc.
-Scripts
-client-install: Installs client-side dependencies.
-
-start: Starts the application using the node command.
-
-server: Starts the server with nodemon for automatic restarts.
-
-client: Starts the client-side application.
-
-dev: Runs both server and client concurrently for development.
-
-Technologies Used
-Express: Fast, unopinionated, minimalist web framework for Node.js.
-
-Sequelize: Promise-based Node.js ORM for MySQL.
-
-JWT: JSON Web Token for secure authentication.
-
-Nodemailer: Easy-to-use library for sending emails.
-
-Node-cron: Cron for Node.js.
-
-Winston: Versatile logging library.
-
-Joi and Yup: Data validation libraries.
-
-License
-This project is licensed under the ISC License.
-
-Author
-[Your Name]
-For any questions or collaboration, feel free to contact me.
-
-You can customize this README by adding specific details about your project, such as repository URLs, your contact information, or additional instructions for deployment.
+</body>
+</html>
