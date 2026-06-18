@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-const withAuth = require('../withAuth')
+const withAuth = require('../middleware/withAuth.middleware.js')
 
 const application = require("../controllers/application.controller.js");
 
@@ -9,7 +9,7 @@ const application = require("../controllers/application.controller.js");
 router.get('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, application.findAll)
 
 // Create a new Application
-router.post('/', withAuth.verifyToken, application.create);
+router.post('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, application.create);
 
 //Retrieve all Application by User Id
 router.get('/user/:id', withAuth.verifyToken, application.findAllByUserId);

@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-const withAuth = require('../withAuth');
+const withAuth = require('../middleware/withAuth.middleware.js');
 var validate = require('../middleware/validate.middleware.js');
 const organisation = require("../controllers/organisation.controller.js");
 const {organisationVerificationValidation,organisationValidation} = require("../validationSchemas/organisation.validation.js")

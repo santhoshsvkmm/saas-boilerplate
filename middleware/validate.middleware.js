@@ -6,19 +6,27 @@ const ApiError = require('../utils/ApiError');
 const validate = (schema) => (req, res, next) => {
   const validSchema = pick(schema, ['params', 'query', 'body']);
   const object = pick(req, Object.keys(validSchema));
-  const { value, error } = Joi.compile(validSchema)
-    .prefs({ errors: { label: 'key' }, abortEarly: false })
-    .validate(object);
+  
+  const { value, error } = Joi.validate(object, validSchema, {
+    errors: { label: 'key' },
+    abortEarly: false,
+    allowUnknown: true
+  });
 
   if (error) {
-    const errorMessage = error.details.map((details) => { return ({
-      message:details.message,
-      field:details.context.label
-    })});
-    const apiErrorResponse =  new ApiError(httpStatus.BAD_REQUEST, errorMessage);
-    next(apiErrorResponse.getErrorObject())
+    const errorMessage = error.details.map((details) => ({
+      message: details.message,
+      field: details.context.key || details.context.label
+    }));
+    
+    const apiErrorResponse = new ApiError(httpStatus.BAD_REQUEST, errorMessage);
+    return next(apiErrorResponse.getErrorObject());
   }
-  Object.assign(req, value);
+
+  Object.keys(value).forEach((key) => {
+    Object.assign(req[key], value[key]);
+  });
+
   return next();
 };
 

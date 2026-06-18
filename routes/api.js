@@ -3,8 +3,10 @@ var router = express.Router();
 
 var organizationRouter = require('./organization.routes')
 var featureRouter = require('./feature.route');
+var branchRouter = require('./branch.routes');
 var userRouter = require('./user.routes')
 var departmentRouter = require('./department.routes')
+var designationRouter = require('./designation.routes')
 var departmentAnnouncementRouter = require('./departmentAnnouncement.routes')
 var jobRouter = require('./job.routes')
 var daysHolidayRouter = require('./daysHoliday.routes')
@@ -16,6 +18,8 @@ var userMessageRouter = require('./userMessage.routes')
 var userPersonalEventRouter = require('./userPersonalEvent.routes')
 var userPersonalInformationRouter = require('./userPersonalInformation.routes')
 var userFinancialInformationRouter = require('./userFinacnialInformation.routes');
+var skillTypesRouter = require('./skillTypes.routes');
+var skillsRouter = require('./skills.routes');
 var rolesRouter = require("./roles.routes");
 
 /* GET home page. */
@@ -25,9 +29,11 @@ router.get('/', function(req, res, next) {
 
 router.use('/organisations', organizationRouter)
 router.use('/roles',rolesRouter)
+router.use('/branches', branchRouter)
 router.use('/feature',featureRouter)
 router.use('/users', userRouter)
 router.use('/departments', departmentRouter)
+router.use('/designations', designationRouter)
 router.use('/departmentAnnouncements', departmentAnnouncementRouter)
 router.use('/jobs', jobRouter)
 router.use('/daysHolidays', daysHolidayRouter)
@@ -39,5 +45,7 @@ router.use('/messages', userMessageRouter)
 router.use('/personalEvents', userPersonalEventRouter)
 router.use('/personalInformations', userPersonalInformationRouter)
 router.use('/financialInformations', userFinancialInformationRouter)
+router.use('/skillTypes', skillTypesRouter)
+router.use('/skills', skillsRouter)
 
 module.exports = router;

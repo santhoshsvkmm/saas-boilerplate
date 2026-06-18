@@ -3,9 +3,10 @@ const Department = db.department;
 const User = db.user;
 const Job = db.job;
 const Op = db.Sequelize.Op;
+const catchAsync = require("../utils/catchAsync");
 
 // Create and Save a new Department
-exports.create = (req, res) => {
+exports.create = catchAsync(async (req, res) => {
   // Validate request
   if (!req.body) {
     res.status(400).send({
@@ -21,21 +22,13 @@ exports.create = (req, res) => {
   };
 
   // Save Department in the database
-  Department.create(department)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Department."
-      });
-    });
-};
+  const data = await Department.create(department);
+  res.status(201).send(data);
+});
 
 // Retrieve all Departments from the database.
-exports.findAll = (req, res) => {
-  Department.findAll({
+exports.findAll = catchAsync(async (req, res) => {
+  const data = await Department.findAll({
     include: [{
       model: User,
       include: {
@@ -45,23 +38,15 @@ exports.findAll = (req, res) => {
         }
       }
     }]
-  })
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving departments."
-      });
-    });
-};
+  });
+  res.send(data);
+});
 
 // Find a single Department with an id
-exports.findOne = (req, res) => {
+exports.findOne = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  Department.findByPk(id, {
+  const data = await Department.findByPk(id, {
     include: [{
       model: User,
       include: {
@@ -71,92 +56,55 @@ exports.findOne = (req, res) => {
         }
       }
     }]
-  })
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error retrieving Department with id=" + id
-      });
-    });
-};
+  });
+  res.send(data);
+});
 
 // Update a Department by the id in the request
-exports.update = (req, res) => {
+exports.update = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  Department.update(req.body, {
+  const [num] = await Department.update(req.body, {
     where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "Department was updated successfully."
-        });
-      } else {
-        res.send({
-          message: `Cannot update Department with id=${id}. Maybe Department was not found or req.body is empty!`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error updating Department with id=" + id
-      });
+  });
+
+  if (num == 1) {
+    res.send({
+      message: "Department was updated successfully."
     });
-};
+  } else {
+    res.send({
+      message: `Cannot update Department with id=${id}. Maybe Department was not found or req.body is empty!`
+    });
+  }
+});
 
 // Delete an Department with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  User.findAll({
-    where: {departmentId: id}
-  })
-  .then(users => {
-    if(users) {
-      users.map(user => {
-        user.departmentId = null;
-        user.save();
-      })
-    }
-  })
-
-  Department.destroy({
+  // The onDelete: 'SET NULL' hook in the model association will automatically
+  // handle setting the departmentId to null for associated users.
+  const num = await Department.destroy({
     where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "Department was deleted successfully!"
-        });
-      } else {
-        res.send({
-          message: `Cannot delete Department with id=${id}. Maybe Tutorial was not found!`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Could not delete Department with id=" + id
-      });
+  });
+
+  if (num == 1) {
+    res.send({
+      message: "Department was deleted successfully!"
     });
-};
+  } else {
+    res.send({
+      message: `Cannot delete Department with id=${id}. Maybe Department was not found!`
+    });
+  }
+});
 
 // Delete all Departments from the database.
-exports.deleteAll = (req, res) => {
-  Department.destroy({
+exports.deleteAll = catchAsync(async (req, res) => {
+  const nums = await Department.destroy({
     where: {},
     truncate: false
-  })
-    .then(nums => {
-      res.send({ message: `${nums} Departments were deleted successfully!` });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all Departments."
-      });
-    });
-};
+  });
+  res.send({ message: `${nums} Departments were deleted successfully!` });
+});

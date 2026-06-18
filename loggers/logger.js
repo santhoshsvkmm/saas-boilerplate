@@ -1,5 +1,6 @@
 const winston = require('winston');
-require('dotenv').config()
+require('winston-daily-rotate-file');
+require('dotenv').config();
 
 const enumerateErrorFormat = winston.format((info) => {
   if (info instanceof Error) {
@@ -8,11 +9,25 @@ const enumerateErrorFormat = winston.format((info) => {
   return info;
 });
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const fileTransport = new winston.transports.DailyRotateFile({
+  filename: 'logs/%YYYY%/%MM%/%DD%.json',
+  datePattern: 'YYYY-MM-DD',
+  zippedArchive: true,
+  maxSize: '20m',
+  maxFiles: '14d',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  )
+});
+
 const logger = winston.createLogger({
-  level: process.env === 'development' ? 'debug' : 'info',
+  level: isDevelopment ? 'debug' : 'info',
   format: winston.format.combine(
     enumerateErrorFormat(),
-    process.env === 'development' ? winston.format.colorize() : winston.format.uncolorize(),
+    isDevelopment ? winston.format.colorize() : winston.format.uncolorize(),
     winston.format.splat(),
     winston.format.printf(({ level, message }) => `${level}: ${message}`)
   ),
@@ -20,6 +35,7 @@ const logger = winston.createLogger({
     new winston.transports.Console({
       stderrLevels: ['error'],
     }),
+    fileTransport
   ],
 });
 

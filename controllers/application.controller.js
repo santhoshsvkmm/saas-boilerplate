@@ -5,10 +5,11 @@ const Department = db.department
 const Op = db.Sequelize.Op;
 const moment = require('moment');
 const { department } = require("../models");
+const catchAsync = require("../utils/catchAsync");
 
 // Create and Save a new Application
-exports.create = (req, res) => {
-  // Validate request
+exports.create = catchAsync(async (req, res) => {
+    // Validate request
   if (!req.body) {
     res.status(400).send({
       message: "Content can not be empty!",
@@ -28,37 +29,21 @@ exports.create = (req, res) => {
 
   // Save Application in the database
 
-  Application.create(application)
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Application.",
-      });
-    });
-};
+  const data = await Application.create(application);
+  res.send(data);
+});
 
 // Retrieve all Applications from the database.
-exports.findAll = (req, res) => {
-  Application.findAll({
+exports.findAll = catchAsync(async (req, res) => {
+  const data = await Application.findAll({
     include: User
-  })
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Applications.",
-      });
-    });
-};
+  });
+  res.send(data);
+});
 
 // Retrieve all Applications from the database.
-exports.findAllRecent = (req, res) => {
-  Application.findAll({
+exports.findAllRecent = catchAsync(async (req, res) => {
+  const data = await Application.findAll({
     where: {
       [Op.and]: [
         {startDate: {
@@ -72,52 +57,14 @@ exports.findAllRecent = (req, res) => {
     include: [{
       model: User
     }]
-  })
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      console.log(err)
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Applications.",
-      });
-    });
-};
+  });
+  res.send(data);
+});
 
-// Retrieve all Applications from the database.
-exports.findAllRecent = (req, res) => {
-  Application.findAll({
-    where: {
-      [Op.and]: [
-        {startDate: {
-          [Op.gte]: moment().subtract(14, 'days').toDate()
-        }},
-        {startDate : {
-          [Op.lte]: moment().add(7, 'days').toDate()
-        }}
-      ]
-    },
-    include: [{
-      model: User
-    }]
-  })
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      console.log(err)
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Applications.",
-      });
-    });
-};
-
-exports.findAllRecentAndDept = (req, res) => {
+exports.findAllRecentAndDept = catchAsync(async (req, res) => {
   const id = req.params.id
 
-  Application.findAll({
+  const data = await Application.findAll({
     where: {
       [Op.and]: [
         {startDate: {
@@ -132,23 +79,14 @@ exports.findAllRecentAndDept = (req, res) => {
       model: User,
       where: {departmentId: id}
     }]
-  })
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      console.log(err)
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Applications.",
-      });
-    });
-};
+  });
+  res.send(data);
+});
 
-exports.findAllRecentAndUser = (req, res) => {
+exports.findAllRecentAndUser = catchAsync(async (req, res) => {
   const id = req.params.id
 
-  Application.findAll({
+  const data = await Application.findAll({
     where: {
       [Op.and]: [
         {startDate: {
@@ -163,161 +101,104 @@ exports.findAllRecentAndUser = (req, res) => {
       model: User,
       where: {id: id}
     }]
-  })
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      console.log(err)
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Applications.",
-      });
-    });
-};
+  });
+  res.send(data);
+});
 
 //Retrieve all Applications By User Id
-exports.findAllByDeptId = (req, res) => {
+exports.findAllByDeptId = catchAsync(async (req, res) => {
   const deptId = req.params.id;
 
-  Application.findAll({
+  const data = await Application.findAll({
     include: [{
       model: User,
       where: {departmentId: deptId}
     }]
-  })
-  .then(data => {
-    res.send(data)
-  })
-  .catch(err => {
-    res.status(500).send({
-      message:
-        err.message || "Some error occurred while retrieving Applications.",
-    });
-  })
-};
+  });
+  res.send(data);
+});
 
 //Retrieve all Applications By User Id
-exports.findAllByUserId = (req, res) => {
+exports.findAllByUserId = catchAsync(async (req, res) => {
   const userId = req.params.id;
+  const loggedInUserId = req.authData.user.id;
 
-  User.findByPk(userId).then((user) => {
-    Application.findAll({ 
-      include: [{
-        model: User
-      }],
-      where: { userId: userId } 
-    })
-      .then((data) => {
-        res.send(data);
-      })
-      .catch((err) => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while retrieving Applications.",
-        });
-      });
+  if (loggedInUserId.toString() !== userId && req.authData.user.role !== 'ROLE_ADMIN' && req.authData.user.role !== 'ROLE_MANAGER') {
+    return res.status(403).send({ message: "Access denied: You are not authorized to view these applications." });
+  }
+
+  await User.findByPk(userId);
+  const data = await Application.findAll({ 
+    include: [{
+      model: User
+    }],
+    where: { userId: userId } 
   });
-};
+  res.send(data);
+});
 
 // Find a single Application with an id
-exports.findOne = (req, res) => {
+exports.findOne = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  Application.findByPk(id)
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Error retrieving Application with id=" + id,
-      });
-    });
-};
+  const data = await Application.findByPk(id);
+  res.send(data);
+});
 
 // Update a Application by the id in the request
-exports.update = (req, res) => {
+exports.update = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  Application.update(req.body, {
+  const [num] = await Application.update(req.body, {
     where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "Application was updated successfully.",
-        });
-      } else {
-        res.send({
-          message: `Cannot update Application with id=${id}. Maybe Application was not found or req.body is empty!`,
-        });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).send({
-        message: "Error updating Application with id=" + id,
-      });
+  });
+
+  if (num == 1) {
+    res.send({
+      message: "Application was updated successfully.",
     });
-};
+  } else {
+    res.send({
+      message: `Cannot update Application with id=${id}. Maybe Application was not found or req.body is empty!`,
+    });
+  }
+});
 
 // Delete a Application with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  Application.destroy({
+  const num = await Application.destroy({
     where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "Application was deleted successfully!",
-        });
-      } else {
-        res.send({
-          message: `Cannot delete Application with id=${id}. Maybe Tutorial was not found!`,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Could not delete Application with id=" + id,
-      });
+  });
+
+  if (num == 1) {
+    res.send({
+      message: "Application was deleted successfully!",
     });
-};
+  } else {
+    res.send({
+      message: `Cannot delete Application with id=${id}. Maybe Tutorial was not found!`,
+    });
+  }
+});
 
 // Delete all Applications from the database.
-exports.deleteAll = (req, res) => {
-  Application.destroy({
+exports.deleteAll = catchAsync(async (req, res) => {
+  const nums = await Application.destroy({
     where: {},
     truncate: false,
-  })
-    .then((nums) => {
-      res.send({ message: `${nums} Applications were deleted successfully!` });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all Applications.",
-      });
-    });
-};
+  });
+  res.send({ message: `${nums} Applications were deleted successfully!` });
+});
 
 // Delete all Applications by User Id.
-exports.deleteAllByUserId = (req, res) => {
+exports.deleteAllByUserId = catchAsync(async (req, res) => {
   const userId = req.params.id;
 
-  Application.destroy({
+  const nums = await Application.destroy({
     where: { userId: userId },
     truncate: false,
-  })
-    .then((nums) => {
-      res.send({ message: `${nums} Applications were deleted successfully!` });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all Applications.",
-      });
-    });
-};
+  });
+  res.send({ message: `${nums} Applications were deleted successfully!` });
+});

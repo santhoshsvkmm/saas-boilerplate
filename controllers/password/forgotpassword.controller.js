@@ -1,7 +1,7 @@
 const db = require("../../models");
 const User = db.user;
 const  {generateUrlToken} = require ("../../utils/token");
-const sendEmail = require("../../middleware/email.middleware");
+const sendEmail = require("../../services/email.services");
 const generateForgotPasswordTemplate = require("../../emailTemplates/forgotPassword");
 
 

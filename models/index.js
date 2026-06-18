@@ -59,69 +59,67 @@ db.materialBidding = require("./materialBidding.model.js")(sequelize,Sequelize);
 
 
 //organisation Associations
-db.organisation.hasOne(db.organisationDetails,{foreignKey:{allowNull:false}});
-db.organisation.hasMany(db.roles,{foreginKey:{allowNull:false}});
-db.organisation.hasMany(db.branch,{foreginKey:{allowNull:false}});
-db.organisation.hasMany(db.department,{foreginKey:{allowNull:false}});
-db.organisation.hasMany(db.user,{foreginKey:{allowNull:false}});
-db.organisation.hasMany(db.feature,{foreginKey:{allowNull:false}});
-db.organisation.hasMany(db.skillTypes,{foreginKey:{allowNull:false}})
-db.organisation.hasMany(db.skills,{foreginKey:{allowNull:false}});
-db.organisation.hasMany(db.project,{foreginKey:{allowNull:false}});
-db.organisation.hasMany(db.material,{foreginKey:{allowNull:false}});
+db.organisation.hasOne(db.organisationDetails, { foreignKey: { name: 'organisationId', allowNull: false }});
+db.organisation.hasMany(db.roles, { foreignKey: { name: 'organisationId', allowNull: false }});
+db.organisation.hasMany(db.branch, { foreignKey: { name: 'organisationId', allowNull: false }});
+db.organisation.hasMany(db.department, { foreignKey: { name: 'organisationId', allowNull: false }});
+db.organisation.hasMany(db.user, { foreignKey: { name: 'organisationId', allowNull: false }});
+db.organisation.hasMany(db.feature, { foreignKey: { name: 'organisationId', allowNull: false }});
+db.organisation.hasMany(db.skillTypes, { foreignKey: { name: 'organisationId', allowNull: false }});
+db.organisation.hasMany(db.project, { foreignKey: { name: 'organisationId', allowNull: false }});
+db.organisation.hasMany(db.material, { foreignKey: { name: 'organisationId', allowNull: false }});
 
 //roles Associations
-db.roles.hasMany(db.user,{foreginKey:{allowNull:false}});
+db.roles.hasMany(db.user, { foreignKey: { name: 'roleId', allowNull: false }});
 
 //feature Associations
 // db.feature.hasMany(db.roles,{foreginKey:{allowNull:false}})
 
 //Branch Associations
-db.branch.hasMany(db.department,{foreginKey:{allowNull:false}});
+db.branch.hasMany(db.department, { foreignKey: { name: 'branchId', allowNull: false }});
 
 //Department Associations
-db.department.hasMany(db.desgination,{foreginKey:{allowNull:false}});
+db.department.hasMany(db.desgination, { foreignKey: { name: 'departmentId', allowNull: false }});
+db.department.hasMany(db.user, { foreignKey: 'departmentId', onDelete: 'SET NULL', hooks: true });
+db.department.hasMany(db.deptAnnouncement, { foreignKey: 'departmentId', onDelete: 'CASCADE', hooks: true });
+db.department.hasMany(db.expense, { foreignKey: { name: 'departmentId', allowNull: false }});
 
 //skillType Associations
-db.skillTypes.hasMany(db.skills,{foreginKey:{allowNull:false}})
+db.skillTypes.hasMany(db.skills, { foreignKey: { name: 'skillTypeId', allowNull: false }});
 
 // User Associations
-db.user.hasOne(db.userPersonalInfo, {foreignKey: {allowNull: false}})
-db.user.hasOne(db.userFinancialInfo, {foreignKey: {allowNull: false}})
-db.user.hasMany(db.userPersonalEvent, {foreignKey: {allowNull: false}, onDelete: 'CASCADE', hooks: true})
-db.user.hasMany(db.project, {foreignKey: {allowNull: false}, onDelete: 'CASCADE', hooks: true})
-db.user.hasMany(db.deptAnnouncement, {foreignKey: {name: 'createdByUserId', allowNull: false}, onDelete: 'CASCADE', hooks: true})
-db.user.hasMany(db.job, {foreignKey: {allowNull: false}, onDelete: 'CASCADE', hooks: true})
-db.user.belongsTo(db.department, {foreginKey: {allowNull: true}})
-db.user.belongsTo(db.desgination, {foreginKey: {allowNull: true}})
-db.user.belongsTo(db.branch, {foreginKey: {allowNull: true}})
-// User Financial Informations Assocations
-db.userFinancialInfo.belongsTo(db.user, {foreignKey: {allowNull: false}})
+db.user.hasOne(db.userPersonalInfo, { foreignKey: { name: 'userId', allowNull: false }});
+db.user.hasOne(db.userFinancialInfo, { foreignKey: { name: 'userId', allowNull: false }});
+db.user.hasMany(db.userPersonalEvent, { foreignKey: { name: 'userId', allowNull: false }, onDelete: 'CASCADE', hooks: true });
+db.user.hasMany(db.project, { foreignKey: { name: 'userId', allowNull: false }, onDelete: 'CASCADE', hooks: true });
+db.user.hasMany(db.deptAnnouncement, { foreignKey: { name: 'createdByUserId', allowNull: false }, onDelete: 'CASCADE', hooks: true });
+db.user.hasMany(db.job, { foreignKey: { name: 'userId', allowNull: false }, onDelete: 'CASCADE', hooks: true });
+db.user.belongsTo(db.department, { foreignKey: { name: 'departmentId', allowNull: true }});
+db.user.belongsTo(db.desgination, { foreignKey: { name: 'desginationId', allowNull: true }});
+db.user.belongsTo(db.branch, { foreignKey: { name: 'branchId', allowNull: true }});
 
-// Department Associations
-db.department.hasMany(db.user, {onDelete: 'CASCADE', hooks: true})
-db.department.hasMany(db.deptAnnouncement, {foreignKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true})
-db.department.hasMany(db.expense, {foreignKey: {allowNull: false}})
+// User Financial Informations Assocations
+db.userFinancialInfo.belongsTo(db.user, { foreignKey: { name: 'userId', allowNull: false }});
 
 // Expense Association
-db.expense.belongsTo(db.department, {foreignKey: {allowNull: false}})
+db.expense.belongsTo(db.department, { foreignKey: { name: 'departmentId', allowNull: false }});
 
 // Job Associations
-db.job.hasMany(db.payment, {foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true})
-db.job.belongsTo(db.user, {foreignKey: {allowNull: false}})
+db.job.hasMany(db.payment, { foreignKey: { name: 'jobId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
+db.job.belongsTo(db.user, { foreignKey: { name: 'userId', allowNull: false }});
 
 // project Associations
 db.project.belongsTo(db.user);
 db.project.belongsTo(db.organisation);
 db.project.hasOne(db.projectlocationinfo);
-db.project.hasMany(db.projectverison,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true});
-db.project.hasMany(db.material,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true});
-db.project.hasMany(db.materialProcurementPlan,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true})
+db.project.hasMany(db.projectverison, { foreignKey: { name: 'projectId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
+db.project.hasMany(db.material, { foreignKey: { name: 'projectId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
+db.project.hasMany(db.materialProcurementPlan, { foreignKey: { name: 'projectId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
 
 //projectversion Associations
-db.projectverison.hasMany(db.task,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true});
-db.projectverison.hasMany(db.projectnonworkingdays,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true});
-db.projectverison.hasMany(db.phase,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true});
+db.projectverison.hasMany(db.task, { foreignKey: { name: 'projectVersionId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
+db.projectverison.hasMany(db.projectnonworkingdays, { foreignKey: { name: 'projectVersionId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
+db.projectverison.hasMany(db.phase, { foreignKey: { name: 'projectVersionId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
 
 //task Associations
 // db.task.hasMany(db.materials,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true})
@@ -131,8 +129,8 @@ db.projectverison.hasMany(db.phase,{foreginKey: {allowNull: true}, onDelete: 'CA
 db.payment.belongsTo(db.job)
 
 // Announcement Associations
-db.deptAnnouncement.belongsTo(db.department, {foreignKey: {allowNull: true}})
-db.deptAnnouncement.belongsTo(db.user, {foreignKey: {name: 'createdByUserId', allowNull: false}})
+db.deptAnnouncement.belongsTo(db.department, { foreignKey: { name: 'departmentId', allowNull: true }});
+db.deptAnnouncement.belongsTo(db.user, { foreignKey: { name: 'createdByUserId', allowNull: false }});
 
 
 //Material Associations

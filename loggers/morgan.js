@@ -1,10 +1,10 @@
 const morgan = require('morgan');
-require('dotenv').config()
+require('dotenv').config();
 const logger = require('./logger');
 
 morgan.token('message', (req, res) => res.locals.errorMessage || '');
 
-const getIpFormat = () => (process.env === 'production' ? ':remote-addr - ' : '');
+const getIpFormat = () => (process.env.NODE_ENV === 'production' ? ':remote-addr - ' : '');
 const successResponseFormat = `${getIpFormat()}:method :url :status - :response-time ms`;
 const errorResponseFormat = `${getIpFormat()}:method :url :status - :response-time ms - message: :message`;
 

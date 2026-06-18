@@ -8,53 +8,43 @@ const Payment = db.payment;
 const Op = db.Sequelize.Op;
 
 const bcrypt = require('bcrypt');
+const catchAsync = require("../utils/catchAsync");
 
-
-exports.createUser = (details,res) => {
-    User.findOne({ 
-        where: { username: details.username } 
-    })
-        .then(userExists => {
-            if (!userExists) {
-                User.create(details)
-                    .then(data => {
-                        res.send(data);
-                    })
-            } 
-        })
-}
 
 // Create and Save a new User
-exports.create = (req, res) => {
+exports.create = catchAsync(async (req, res) => {
     // Validate request
     if (!req.body) {
-        res.status(400).send({
+        return res.status(400).send({
             message: "Content can not be empty!"
         });
-        return;
+    }
+
+    const userExists = await User.findOne({ where: { username: req.body.username } });
+    if (userExists) {
+        return res.status(403).send({ message: "Username already exists." });
     }
 
     let hash = null;
-    if(req.body.password) {
+    if (req.body.password) {
         hash = bcrypt.hashSync(req.body.password.toString(), 10);
     }
     // Create a User
     const user = {
         username: req.body.username,
         password: hash,
-        fullName: req.body.fullname,
+        fullName: req.body.fullName,
         role: req.body.role,
         active: true,
         departmentId: req.body.departmentId
     };
-    createUser(user,res)
-    // Save User in the database
-  
-};
+    const data = await User.create(user);
+    res.status(201).send(data);
+});
 
 // Retrieve all Users from the database.
-exports.findAll = (req, res) => {
-    User.findAll({
+exports.findAll = catchAsync(async (req, res) => {
+    const data = await User.findAll({
         include: [{
             model: UserPersonalInfo
         }, {
@@ -65,89 +55,43 @@ exports.findAll = (req, res) => {
             model: Job
         }]
     })
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while retrieving the Users."
-            });
-        });
-};
+    res.send(data);
+});
 
 // Retrieve all Users from the database.
-exports.findTotal = (req, res) => {
-    User.count()
-        .then(data => {
-            res.send(data.toString());
-        })
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while retrieving the Users."
-            });
-        });
-};
+exports.findTotal = catchAsync(async (req, res) => {
+    const data = await User.count();
+    res.send(data.toString());
+});
 
 // Retrieve all Users from the database.
-exports.findTotalByDept = (req, res) => {
+exports.findTotalByDept = catchAsync(async (req, res) => {
     const id = req.params.id
     
-    User.count({
+    const data = await User.count({
         where: {departmentId: id}
     })
-        .then(data => {
-            res.send(data.toString());
-        })
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while retrieving the Users."
-            });
-        });
-};
+    res.send(data.toString());
+});
 
 
 // Retrieve all Users by Department Id
-exports.findAllByDeptId = (req, res) => {
+exports.findAllByDeptId = catchAsync(async (req, res) => {
     const departmentId = req.params.id;
 
-    User.findAll({ 
+    const data = await User.findAll({ 
         where: { departmentId: departmentId },
-        include: [{
-            model: UserPersonalInfo
-        }, {
-            model: UserFinancialInfo
-        }, {
-            model: Department
-        }, {
-            model: Job
-        }] 
-    })
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while retrieving the Users from the Organization wiht Id:" + organizationId
-            });
-        });
-};
+        include: [UserPersonalInfo, UserFinancialInfo, Department, Job] 
+    });
+    res.send(data);
+});
 
 // Find a single User with an id
-exports.findOne = (req, res) => {
+exports.findOne = catchAsync(async (req, res) => {
     const id = req.params.id;
 
-    User.findOne({
-        include: [{
-            model: UserPersonalInfo
-        }, {
-            model: UserFinancialInfo
-        }, {
-            model: Department
-        }, {
+    const data = await User.findOne({
+        include: [UserPersonalInfo, UserFinancialInfo, Department, {
             model: Job,
             include: [{
                 model: Payment
@@ -156,155 +100,102 @@ exports.findOne = (req, res) => {
         where: {
             id: id
         }
-    })
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Error retrieving User with id=" + id
-            });
-        });
-};
+    });
+    res.send(data);
+});
 
 // Update a User by the id in the request
-exports.update = (req, res) => {
+exports.update = catchAsync(async (req, res) => {
     const id = req.params.id;
 
     if(req.body.password) {
-        req.body.password = bcrypt(req.body.password, 10);
+        req.body.password = bcrypt.hashSync(req.body.password.toString(), 10);
     }
 
-    User.update(req.body, {
+    const [num] = await User.update(req.body, {
         where: { id: id }
-    })
-        .then(num => {
-            if (num == 1) {
-                res.send({
-                    message: "User was updated successfully."
-                });
-            } else {
-                res.send({
-                    message: `Cannot update User with id=${id}. Maybe Organization was not found or req.body is empty!`
-                });
-            }
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Error updating User with id=" + id
-            });
-        });
-};
+    });
 
-exports.changePassword = (req, res) => {
+    if (num == 1) {
+        res.send({
+            message: "User was updated successfully."
+        });
+    } else {
+        res.send({
+            message: `Cannot update User with id=${id}. Maybe User was not found or req.body is empty!`
+        });
+    }
+});
+
+exports.changePassword = catchAsync(async (req, res) => {
     const id = req.params.id;
 
     if (!req.body.oldPassword || !req.body.newPassword) {
-        res.status(400).send({
+        return res.status(400).send({
             message: "Please send oldPassword and newPassword!"
         });
-        return;
     }
 
-    User.findOne({
+    const user = await User.findOne({
         where: {id: id}
-    })
-    .then(user => {
-        if(user) {
-            if(bcrypt.compareSync(req.body.oldPassword, user.password)) {
-                let hash = bcrypt.hashSync(req.body.newPassword, 10)
-                console.log('hash', hash)
-                let data = {
-                    password: hash
-                }
-                User.update(data, {
-                    where: {id: id}
-                })
-                .then(num => {
-                    if (num == 1) {
-                        res.send({
-                            message: "User was updated successfully."
-                        });
-                    } else {
-                        res.send({
-                            message: `Cannot update User with id=${id}. Maybe Organization was not found or req.body is empty!`
-                        });
-                    }
-                })
-                .catch(err => {
-                    res.status(500).send({
-                        message: "Error updating User with id=" + id
-                    });
-                })
-            } else {
-                res.status(400).send({
-                    message: "Wrong Password"
-                });
-            }
-        } else {
-            res.status(400).send({
-                message: "No such user!"
-            });
-        }
-    })
-};
+    });
+
+    if (!user) {
+        return res.status(400).send({ message: "No such user!" });
+    }
+
+    if (!bcrypt.compareSync(req.body.oldPassword, user.password)) {
+        return res.status(400).send({ message: "Wrong Password" });
+    }
+
+    const hash = bcrypt.hashSync(req.body.newPassword, 10);
+    const [num] = await User.update({ password: hash }, { where: { id: id } });
+
+    if (num == 1) {
+        res.send({
+            message: "User password was updated successfully."
+        });
+    } else {
+        res.send({
+            message: `Cannot update User with id=${id}.`
+        });
+    }
+});
 
 // Delete a User with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = catchAsync(async (req, res) => {
     const id = req.params.id;
 
-    User.destroy({
+    const num = await User.destroy({
         where: { id: id }
-    })
-        .then(num => {
-            if (num == 1) {
-                res.send({
-                    message: "User was deleted successfully!"
-                });
-            } else {
-                res.send({
-                    message: `Cannot delete User with id=${id}. Maybe Tutorial was not found!`
-                });
-            }
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Could not delete User with id=" + id
-            });
+    });
+
+    if (num == 1) {
+        res.send({
+            message: "User was deleted successfully!"
         });
-};
+    } else {
+        res.send({
+            message: `Cannot delete User with id=${id}. Maybe User was not found!`
+        });
+    }
+});
 
 // Delete all Users from the database.
-exports.deleteAll = (req, res) => {
-    User.destroy({
+exports.deleteAll = catchAsync(async (req, res) => {
+    const nums = await User.destroy({
         where: {},
         truncate: false
-    })
-        .then(nums => {
-            res.send({ message: `${nums} Users were deleted successfully!` });
-        })
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while removing all Users."
-            });
-        });
-};
+    });
+    res.send({ message: `${nums} Users were deleted successfully!` });
+});
 
-exports.deleteAllByDeptId = (req, res) => {
+exports.deleteAllByDeptId = catchAsync(async (req, res) => {
     const departmentId = req.params.id
 
-    User.destroy({
+    const nums = await User.destroy({
         where: { departmentId: departmentId },
         truncate: false
-    })
-        .then(nums => {
-            res.send({ message: `${nums} Users of Organizations with id: ` + organizationId + ` were deleted successfully!` });
-        })
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while removing all Users."
-            });
-        });
-};
+    });
+    res.send({ message: `${nums} Users from department ${departmentId} were deleted successfully!` });
+});

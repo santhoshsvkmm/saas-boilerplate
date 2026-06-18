@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-const withAuth = require("../withAuth")
+const withAuth = require("../middleware/withAuth.middleware.js")
 
 const expense = require("../controllers/expense.controller.js");
 
@@ -15,7 +15,7 @@ router.get('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, expense.f
 router.get('/year/:id', withAuth.verifyToken, expense.findAllByYear)
 
 // Retrieve Expenses By Year and Department
-router.get('/year/:id/department/:id2', withAuth.verifyToken, withAuth.withRoleManager, expense.findAllByYearAndDept)
+router.get('/year/:year/department/:departmentId', withAuth.verifyToken, withAuth.withRoleManager, expense.findAllByYearAndDept)
 
 //Retrieve all Expenses by Department Id
 router.get('/department/:id', withAuth.verifyToken, withAuth.withRoleAdminOrManager, expense.findAllByDeptId);

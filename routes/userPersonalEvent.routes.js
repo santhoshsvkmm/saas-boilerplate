@@ -1,12 +1,15 @@
 var express = require('express');
 var router = express.Router();
 
-const withAuth = require("../withAuth")
+const withAuth = require("../middleware/withAuth.middleware.js")
 
 const personalEvent = require("../controllers/userPersonalEvent.controller.js");
 
 // Create a new Personal Event
 router.post('/', withAuth.verifyToken, personalEvent.create);
+
+//Retrieve all Personal Events
+router.get('/', withAuth.verifyToken, withAuth.withRoleAdmin, personalEvent.findAll);
 
 //Retrieve all Personal Events  by User Id
 router.get('/user/:id', withAuth.verifyToken, personalEvent.findAllByUserId);

@@ -1,10 +1,11 @@
 const db = require("../models");
 const PersonalEvent = db.userPersonalEvent;
 const Op = db.Sequelize.Op;
+const catchAsync = require("../utils/catchAsync");
 
 // Create and Save a new PersonalEvent
-exports.create = (req, res) => {
-  // Validate request
+exports.create = catchAsync(async (req, res) => {
+    // Validate request
   if (!req.body) {
     res.status(400).send({
       message: "Content can not be empty!"
@@ -22,145 +23,91 @@ exports.create = (req, res) => {
   };
 
   // Save PersonalEvent in the database
-  PersonalEvent.create(personalEvent)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the PersonalEvent."
-      });
-    });
-};
+  const data = await PersonalEvent.create(personalEvent);
+  res.send(data);
+});
 
 // Retrieve all Personal Events from the database.
-exports.findAll = (req, res) => {
-  PersonalEvent.findAll()
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving departments."
-      });
-    });
-};
+exports.findAll = catchAsync(async (req, res) => {
+  const data = await PersonalEvent.findAll();
+  res.send(data);
+});
 
 //Retrieve all Personal Events By User Id
-exports.findAllByUserId = (req, res) => {
-    const userId = req.params.id
+exports.findAllByUserId = catchAsync(async (req, res) => {
+    const userId = req.params.id;
+    const loggedInUserId = req.authData.user.id;
 
-    PersonalEvent.findAll({where: {userId: userId}})
-      .then(data => {
-        res.send(data);
-      })
-      .catch(err => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while retrieving departments."
-        });
-      });
-  };
+    if (loggedInUserId.toString() !== userId && req.authData.user.role !== 'ROLE_ADMIN') {
+      return res.status(403).send({ message: "Access denied." });
+    }
+
+    const data = await PersonalEvent.findAll({where: {userId: userId}});
+    res.send(data);
+});
 
 // Find a single PersonalEvent with an id
-exports.findOne = (req, res) => {
+exports.findOne = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  PersonalEvent.findByPk(id)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error retrieving PersonalEvent with id=" + id
-      });
-    });
-};
+  const data = await PersonalEvent.findByPk(id);
+  res.send(data);
+});
 
 // Update an PersonalEvent by the id in the request
-exports.update = (req, res) => {
+exports.update = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  PersonalEvent.update(req.body, {
+  const [num] = await PersonalEvent.update(req.body, {
     where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "PersonalEvent was updated successfully."
-        });
-      } else {
-        res.send({
-          message: `Cannot update PersonalEvent with id=${id}. Maybe PersonalEvent was not found or req.body is empty!`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error updating PersonalEvent with id=" + id
-      });
+  });
+
+  if (num == 1) {
+    res.send({
+      message: "PersonalEvent was updated successfully."
     });
-};
+  } else {
+    res.send({
+      message: `Cannot update PersonalEvent with id=${id}. Maybe PersonalEvent was not found or req.body is empty!`
+    });
+  }
+});
 
 // Delete an PersonalEvent with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  PersonalEvent.destroy({
+  const num = await PersonalEvent.destroy({
     where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "PersonalEvent was deleted successfully!"
-        });
-      } else {
-        res.send({
-          message: `Cannot delete PersonalEvent with id=${id}. Maybe Tutorial was not found!`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Could not delete PersonalEvent with id=" + id
-      });
+  });
+
+  if (num == 1) {
+    res.send({
+      message: "PersonalEvent was deleted successfully!"
     });
-};
+  } else {
+    res.send({
+      message: `Cannot delete PersonalEvent with id=${id}. Maybe Tutorial was not found!`
+    });
+  }
+});
 
 // Delete all Personal Events from the database.
-exports.deleteAll = (req, res) => {
-  PersonalEvent.destroy({
+exports.deleteAll = catchAsync(async (req, res) => {
+  const nums = await PersonalEvent.destroy({
     where: {},
     truncate: false
-  })
-    .then(nums => {
-      res.send({ message: `${nums} Personal Events were deleted successfully!` });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all Personal Events."
-      });
-    });
-};
+  });
+  res.send({ message: `${nums} Personal Events were deleted successfully!` });
+});
 
 // Delete all Personal Events by User Id.
-exports.deleteAllByUserId = (req, res) => {
+exports.deleteAllByUserId = catchAsync(async (req, res) => {
     const userId = req.params.id;
 
-    PersonalEvent.destroy({
+    const nums = await PersonalEvent.destroy({
       where: {userId: userId},
       truncate: false
-    })
-      .then(nums => {
-        res.send({ message: `${nums} Personal Events were deleted successfully!` });
-      })
-      .catch(err => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while removing all Personal Events."
-        });
-      });
-  };
+    });
+    res.send({ message: `${nums} Personal Events were deleted successfully!` });
+});

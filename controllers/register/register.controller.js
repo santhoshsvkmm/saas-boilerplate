@@ -5,7 +5,7 @@ const UserFinancialInfo = db.userFinancialInfo;
 const bcrypt = require('bcrypt');
 const Organisation = db.organisation;
 const OrganisationDetails = db.organisationDetails;
-const sendEmail = require("../../middleware/email.middleware");
+const sendEmail = require("../../services/email.services");
 const organisationVerfication = require('../../emailTemplates/organisationVerfication')
 
 

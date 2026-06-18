@@ -2,7 +2,7 @@ const db = require("../models");
 const Organisation = db.organisation;
 const OrganisationInfo = db.organisationDetails;
 const User = db.user;
-const sendEmail = require("../middleware/email.middleware");
+const sendEmail = require("../services/email.services");
 const organisationVerfication = require("../emailTemplates/organisationVerfication");
 const  {generateUrlToken,decodeToken} = require ("../utils/token");
 require('dotenv').config()

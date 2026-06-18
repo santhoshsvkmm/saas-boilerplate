@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-const withAuth = require("../withAuth")
+const withAuth = require("../middleware/withAuth.middleware.js")
 
 const personalInformation = require("../controllers/userPersonalInformation.controller.js");
 

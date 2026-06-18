@@ -77,8 +77,8 @@ exports.findAllByYear = (req, res) => {
 };
 
 exports.findAllByYearAndDept = (req, res) => {
-  const year = req.params.id;
-  const deptId = req.params.id2;
+  const year = req.params.year;
+  const deptId = req.params.departmentId;
   Expense.findAll({
     where: {
       [Op.and]: [

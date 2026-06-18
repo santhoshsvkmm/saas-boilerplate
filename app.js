@@ -4,9 +4,10 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-var withAuth = require("./withAuth");
+var withAuth = require("./middleware/withAuth.middleware");
 const cors = require('cors');
 
+const { errorHandler } = require('./middleware/error.middleware');
 const db = require("./models");
 require("dotenv").config();
 const rateLimitMiddleware = require("./middleware/rateLimiter.middleware")
@@ -34,11 +35,12 @@ app.use(rateLimitMiddleware);
 // app.use(express.static(path.join(__dirname, "public")));
 
 // var corsOptions = {
-//   origin: 'http://localhost:3000',
+//   origin: 'http://your-frontend-domain.com', // Replace with your actual frontend domain
 //   optionsSuccessStatus: 200
 // }
 
 db.sequelize.sync({ alter: true });
+
 
 // db.sequelize.sync({ force: true }).then(() => {
 //   console.log("Drop and re-sync db.");
@@ -46,9 +48,17 @@ db.sequelize.sync({ alter: true });
 app.use(cors());
 
 
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' ? 'https://your-production-frontend.com' : 'http://localhost:3001'
+};
+
+app.use(cors(corsOptions));
 app.use("/api", api);
 app.use("/login", login);
 app.use("/register", register);
+
+// Centralized error handler
+app.use(errorHandler);
 
 app.get("/checkToken", withAuth.checkToken);
 
