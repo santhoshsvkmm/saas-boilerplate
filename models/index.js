@@ -55,7 +55,10 @@ db.subContractorOfficalInfo = require("./subcontractorOfficalInfo.model.js")(seq
 db.supplier=require("./supplier.model.js")(sequelize,Sequelize);
 db.supplierOfficailInfo=require("./supplierOfficalInfo.model.js")(sequelize,Sequelize);
 db.materialTender = require("./materialTendering.model.js")(sequelize,Sequelize);
+db.materialStockHistory = require("./materialStockHistory.model.js")(sequelize,Sequelize);
 db.materialBidding = require("./materialBidding.model.js")(sequelize,Sequelize);
+db.lookahead = require("./lookahead.model.js")(sequelize,Sequelize);
+db.labourAttendance = require("./labourAttendance.model.js")(sequelize,Sequelize);
 
 
 //organisation Associations
@@ -121,10 +124,24 @@ db.projectverison.hasMany(db.task, { foreignKey: { name: 'projectVersionId', all
 db.projectverison.hasMany(db.projectnonworkingdays, { foreignKey: { name: 'projectVersionId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
 db.projectverison.hasMany(db.phase, { foreignKey: { name: 'projectVersionId', allowNull: true }, onDelete: 'CASCADE', hooks: true });
 
-//task Associations
-// db.task.hasMany(db.materials,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true})
-// db.task.hasMany(db.labours,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true})
-// db.task.hasMany(db.equipments,{foreginKey: {allowNull: true}, onDelete: 'CASCADE', hooks: true})
+// Task-Material Association (Many-to-Many through TaskResourceDetails)
+db.task.belongsToMany(db.material, { through: db.taskresourcedetails, foreignKey: 'task_id' });
+db.material.belongsToMany(db.task, { through: db.taskresourcedetails, foreignKey: 'material_id' });
+
+// Task-Labourer Association (Many-to-Many through TaskResourceDetails)
+db.task.belongsToMany(db.labour, { through: db.taskresourcedetails, foreignKey: 'task_id' });
+db.labour.belongsToMany(db.task, { through: db.taskresourcedetails, foreignKey: 'labour_id' });
+
+// Lookahead (Sprint) Associations
+db.projectverison.hasMany(db.lookahead, { foreignKey: 'projectVersionId' });
+db.lookahead.belongsToMany(db.task, { through: 'LookaheadTasks' });
+db.task.belongsToMany(db.lookahead, { through: 'LookaheadTasks' });
+
+// Labourer-Attendance Association
+db.labour.hasMany(db.labourAttendance, { foreignKey: 'labour_id' });
+db.labourAttendance.belongsTo(db.labour, { foreignKey: 'labour_id' });
+db.labourAttendance.belongsTo(db.project, { foreignKey: 'project_id' });
+
 // Payment Associations
 db.payment.belongsTo(db.job)
 
@@ -137,6 +154,9 @@ db.deptAnnouncement.belongsTo(db.user, { foreignKey: { name: 'createdByUserId', 
 db.material.hasMany(db.materialProcurementPlan);
 db.material.hasMany(db.materialPurchaseOrder);
 db.material.hasMany(db.materialDelivery);
+db.material.hasMany(db.materialStockHistory, { foreignKey: 'material_id' });
+db.materialStockHistory.belongsTo(db.user, { foreignKey: 'related_entity_id', constraints: false, as: 'adjustingUser' });
+
 
 
 //Material Procurement Plan Associations
@@ -148,5 +168,9 @@ db.materialPurchaseOrder.hasMany(db.materialDelivery)
 //Material Tender Associations
 db.materialTender.hasMany(db.materialBidding)
 db.materialBidding.belongsTo(db.materialTender)
+
+// Project-Consultant Association (Many-to-Many)
+db.project.belongsToMany(db.consultant, { through: 'ProjectConsultants' });
+db.consultant.belongsToMany(db.project, { through: 'ProjectConsultants' });
 
 module.exports = db;

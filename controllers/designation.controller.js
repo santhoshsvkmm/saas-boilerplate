@@ -1,6 +1,7 @@
 const db = require("../models");
 const Designation = db.desgination;
 const catchAsync = require("../utils/catchAsync");
+const logger = require('../loggers/logger');
 
 // Create and Save a new Designation
 exports.create = catchAsync(async (req, res) => {
@@ -19,18 +20,23 @@ exports.create = catchAsync(async (req, res) => {
   };
 
   const data = await Designation.create(designation);
+  logger.info(`Designation created successfully with ID: ${data.id}`);
   res.status(201).send(data);
 });
 
 // Retrieve all Designations from the database.
 exports.findAll = catchAsync(async (req, res) => {
-  const data = await Designation.findAll();
+  logger.info('Retrieving all designations.');
+  const data = await Designation.findAll({
+    where: { isDeleted: { [Op.ne]: true } }
+  });
   res.send(data);
 });
 
 // Find a single Designation with an id
 exports.findOne = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Retrieving designation with ID: ${id}`);
 
   const data = await Designation.findByPk(id);
   if (data) {
@@ -45,12 +51,14 @@ exports.findOne = catchAsync(async (req, res) => {
 // Update a Designation by the id in the request
 exports.update = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to update designation with ID: ${id}`);
 
   const [num] = await Designation.update(req.body, {
     where: { id: id },
   });
 
   if (num == 1) {
+    logger.info(`Designation updated successfully with ID: ${id}`);
     res.send({
       message: "Designation was updated successfully.",
     });
@@ -64,12 +72,14 @@ exports.update = catchAsync(async (req, res) => {
 // Delete a Designation with the specified id in the request
 exports.delete = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to delete designation with ID: ${id}`);
 
-  const num = await Designation.destroy({
+  const [num] = await Designation.update({ isDeleted: true }, {
     where: { id: id },
   });
 
   if (num == 1) {
+    logger.info(`Designation deleted successfully with ID: ${id}`);
     res.send({
       message: "Designation was deleted successfully!",
     });
@@ -82,16 +92,20 @@ exports.delete = catchAsync(async (req, res) => {
 
 // Delete all Designations from the database.
 exports.deleteAll = catchAsync(async (req, res) => {
-  const nums = await Designation.destroy({
+  logger.warn('Attempting to delete all designations.');
+  const [nums] = await Designation.update({ isDeleted: true }, {
     where: {},
-    truncate: false,
   });
+  logger.info(`${nums} designations were deleted successfully.`);
   res.send({ message: `${nums} Designations were deleted successfully!` });
 });
 
 // Find all Designations for a specific Department
 exports.findAllByDepartment = catchAsync(async (req, res) => {
     const departmentId = req.params.id;
-    const data = await Designation.findAll({ where: { departmentId: departmentId } });
+    logger.info(`Retrieving all designations for department ID: ${departmentId}`);
+    const data = await Designation.findAll({ 
+      where: { departmentId: departmentId, isDeleted: { [Op.ne]: true } } 
+    });
     res.send(data);
 });

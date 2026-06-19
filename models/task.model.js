@@ -10,7 +10,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING,
             allowNull: true
         },
-        task_name: {
+        name: { // Renaming for consistency with controller
             type: Sequelize.STRING,
             allowNull: true
         },
@@ -23,17 +23,16 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false
         },
         task_priority:{
-            type: Sequelize.ENUM,
-            values: ["low", "meduim", "high","crucial"],
-            allowNull: false,
+            type: Sequelize.STRING, // Using STRING for more flexibility
+            allowNull: true,
         },
-        is_Active: {
+        is_active: { // Renaming for consistency
             type: Sequelize.BOOLEAN,
-            allowNull: false
+            defaultValue: true
         },
         is_milestone: {
             type: Sequelize.BOOLEAN,
-            allowNull: false
+            defaultValue: false
         },
         is_criticalTask: {
             type: Sequelize.BOOLEAN,
@@ -44,30 +43,53 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false
         },
         predecessor:{
-            type: Sequelize.JSON,  
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
+            type: Sequelize.JSON,
+            allowNull: true,
         } ,
         successor :{
-            type: Sequelize.JSON,  
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
+            type: Sequelize.JSON,
+            allowNull: true,
         },
         is_contracted: {
             type: Sequelize.BOOLEAN,
-            allowNull: false
+            defaultValue: false
         },
         assigned_to: {
-            type: Sequelize.JSON,  
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-        }
+            type: Sequelize.JSON,
+            allowNull: true,
+        },
+        description: {
+            type: Sequelize.TEXT,
+            allowNull: true
+        },
+        clonedFromTaskId: { // Link to the original task ID when cloned
+            type: Sequelize.INTEGER,
+            allowNull: true,
+        },
+        status: {
+            type: Sequelize.STRING,
+            defaultValue: 'not-started'
+        },
+        blocker_reason: {
+            type: Sequelize.TEXT,
+            allowNull: true
+        },
+        progress: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0
+        },
+        effort: { // The new field for story points or hours
+            type: Sequelize.DECIMAL(10, 2),
+            defaultValue: 1.00
+        },
+        completedAt: {
+            type: Sequelize.DATE,
+            allowNull: true
+        },
+        isDeleted: {
+            type: Sequelize.BOOLEAN,
+            defaultValue: false
+        },
     }, {
         timestamps: true,
         underscored: true,

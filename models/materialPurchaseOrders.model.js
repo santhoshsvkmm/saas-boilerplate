@@ -32,6 +32,11 @@ module.exports = (sequelize, Sequelize) => {
       ExpectedDeliveryDate: {
         type: Sequelize.DATE,
       },
+      status: {
+        type: Sequelize.STRING,
+        defaultValue: 'pending', // e.g., pending, partially_delivered, fully_delivered
+        allowNull: false,
+      },
     },
     {
       timestamps: false,

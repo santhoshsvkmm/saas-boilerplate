@@ -1,6 +1,7 @@
 const db = require("../models");
 const Branch = db.branch;
 const catchAsync = require("../utils/catchAsync");
+const logger = require('../loggers/logger');
 
 // Create and Save a new Branch
 exports.create = catchAsync(async (req, res) => {
@@ -20,18 +21,23 @@ exports.create = catchAsync(async (req, res) => {
   };
 
   const data = await Branch.create(branch);
+  logger.info(`Branch created successfully with ID: ${data.id}`);
   res.status(201).send(data);
 });
 
 // Retrieve all Branches from the database.
 exports.findAll = catchAsync(async (req, res) => {
-  const data = await Branch.findAll();
+  logger.info('Retrieving all branches.');
+  const data = await Branch.findAll({
+    where: { isActive: true }
+  });
   res.send(data);
 });
 
 // Find a single Branch with an id
 exports.findOne = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Retrieving branch with ID: ${id}`);
 
   const data = await Branch.findByPk(id);
   if (data) {
@@ -46,12 +52,14 @@ exports.findOne = catchAsync(async (req, res) => {
 // Update a Branch by the id in the request
 exports.update = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to update branch with ID: ${id}`);
 
   const [num] = await Branch.update(req.body, {
     where: { id: id },
   });
 
   if (num == 1) {
+    logger.info(`Branch updated successfully with ID: ${id}`);
     res.send({
       message: "Branch was updated successfully.",
     });
@@ -65,12 +73,14 @@ exports.update = catchAsync(async (req, res) => {
 // Delete a Branch with the specified id in the request
 exports.delete = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to delete branch with ID: ${id}`);
 
-  const num = await Branch.destroy({
+  const [num] = await Branch.update({ isActive: false }, {
     where: { id: id },
   });
 
   if (num == 1) {
+    logger.info(`Branch deleted successfully with ID: ${id}`);
     res.send({
       message: "Branch was deleted successfully!",
     });
@@ -83,16 +93,20 @@ exports.delete = catchAsync(async (req, res) => {
 
 // Delete all Branches from the database.
 exports.deleteAll = catchAsync(async (req, res) => {
-  const nums = await Branch.destroy({
+  logger.warn('Attempting to delete all branches.');
+  const [nums] = await Branch.update({ isActive: false }, {
     where: {},
-    truncate: false,
   });
+  logger.info(`${nums} branches were deleted successfully.`);
   res.send({ message: `${nums} Branches were deleted successfully!` });
 });
 
 // Find all Branches for a specific Organisation
 exports.findAllByOrganisation = catchAsync(async (req, res) => {
     const organisationId = req.params.id;
-    const data = await Branch.findAll({ where: { organisationId: organisationId } });
+    logger.info(`Retrieving all branches for organisation ID: ${organisationId}`);
+    const data = await Branch.findAll({ 
+      where: { organisationId: organisationId, isActive: true } 
+    });
     res.send(data);
 });

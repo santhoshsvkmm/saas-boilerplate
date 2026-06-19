@@ -9,6 +9,7 @@ const Op = db.Sequelize.Op;
 
 const bcrypt = require('bcrypt');
 const catchAsync = require("../utils/catchAsync");
+const logger = require('../loggers/logger');
 
 
 // Create and Save a new User
@@ -22,7 +23,8 @@ exports.create = catchAsync(async (req, res) => {
 
     const userExists = await User.findOne({ where: { username: req.body.username } });
     if (userExists) {
-        return res.status(403).send({ message: "Username already exists." });
+        logger.warn(`User creation failed for username '${req.body.username}': username already exists.`);
+        return res.status(409).send({ message: "Username already exists." });
     }
 
     let hash = null;
@@ -39,12 +41,15 @@ exports.create = catchAsync(async (req, res) => {
         departmentId: req.body.departmentId
     };
     const data = await User.create(user);
+    logger.info(`User created successfully with ID: ${data.id}`);
     res.status(201).send(data);
 });
 
 // Retrieve all Users from the database.
 exports.findAll = catchAsync(async (req, res) => {
+    logger.info('Retrieving all users.');
     const data = await User.findAll({
+        where: { active: true },
         include: [{
             model: UserPersonalInfo
         }, {
@@ -60,7 +65,10 @@ exports.findAll = catchAsync(async (req, res) => {
 
 // Retrieve all Users from the database.
 exports.findTotal = catchAsync(async (req, res) => {
-    const data = await User.count();
+    logger.info('Retrieving total user count.');
+    const data = await User.count({
+        where: { active: true }
+    });
     res.send(data.toString());
 });
 
@@ -68,8 +76,9 @@ exports.findTotal = catchAsync(async (req, res) => {
 exports.findTotalByDept = catchAsync(async (req, res) => {
     const id = req.params.id
     
+    logger.info(`Retrieving total user count for department ID: ${id}`);
     const data = await User.count({
-        where: {departmentId: id}
+        where: {departmentId: id, active: true}
     })
     res.send(data.toString());
 });
@@ -78,9 +87,10 @@ exports.findTotalByDept = catchAsync(async (req, res) => {
 // Retrieve all Users by Department Id
 exports.findAllByDeptId = catchAsync(async (req, res) => {
     const departmentId = req.params.id;
+    logger.info(`Retrieving all users for department ID: ${departmentId}`);
 
     const data = await User.findAll({ 
-        where: { departmentId: departmentId },
+        where: { departmentId: departmentId, active: true },
         include: [UserPersonalInfo, UserFinancialInfo, Department, Job] 
     });
     res.send(data);
@@ -89,6 +99,7 @@ exports.findAllByDeptId = catchAsync(async (req, res) => {
 // Find a single User with an id
 exports.findOne = catchAsync(async (req, res) => {
     const id = req.params.id;
+    logger.info(`Retrieving user with ID: ${id}`);
 
     const data = await User.findOne({
         include: [UserPersonalInfo, UserFinancialInfo, Department, {
@@ -107,6 +118,7 @@ exports.findOne = catchAsync(async (req, res) => {
 // Update a User by the id in the request
 exports.update = catchAsync(async (req, res) => {
     const id = req.params.id;
+    logger.info(`Attempting to update user with ID: ${id}`);
 
     if(req.body.password) {
         req.body.password = bcrypt.hashSync(req.body.password.toString(), 10);
@@ -118,6 +130,7 @@ exports.update = catchAsync(async (req, res) => {
 
     if (num == 1) {
         res.send({
+            // message: "User was updated successfully."
             message: "User was updated successfully."
         });
     } else {
@@ -129,6 +142,7 @@ exports.update = catchAsync(async (req, res) => {
 
 exports.changePassword = catchAsync(async (req, res) => {
     const id = req.params.id;
+    logger.info(`Attempting to change password for user ID: ${id}`);
 
     if (!req.body.oldPassword || !req.body.newPassword) {
         return res.status(400).send({
@@ -141,10 +155,12 @@ exports.changePassword = catchAsync(async (req, res) => {
     });
 
     if (!user) {
+        logger.warn(`Password change failed: User not found with ID: ${id}`);
         return res.status(400).send({ message: "No such user!" });
     }
 
     if (!bcrypt.compareSync(req.body.oldPassword, user.password)) {
+        logger.warn(`Password change failed for user ID ${id}: Incorrect old password.`);
         return res.status(400).send({ message: "Wrong Password" });
     }
 
@@ -152,6 +168,7 @@ exports.changePassword = catchAsync(async (req, res) => {
     const [num] = await User.update({ password: hash }, { where: { id: id } });
 
     if (num == 1) {
+        logger.info(`Password changed successfully for user ID: ${id}`);
         res.send({
             message: "User password was updated successfully."
         });
@@ -165,12 +182,14 @@ exports.changePassword = catchAsync(async (req, res) => {
 // Delete a User with the specified id in the request
 exports.delete = catchAsync(async (req, res) => {
     const id = req.params.id;
+    logger.info(`Attempting to delete user with ID: ${id}`);
 
-    const num = await User.destroy({
+    const [num] = await User.update({ active: false }, {
         where: { id: id }
     });
 
     if (num == 1) {
+        logger.info(`User deleted successfully with ID: ${id}`);
         res.send({
             message: "User was deleted successfully!"
         });
@@ -183,19 +202,21 @@ exports.delete = catchAsync(async (req, res) => {
 
 // Delete all Users from the database.
 exports.deleteAll = catchAsync(async (req, res) => {
-    const nums = await User.destroy({
+    logger.warn('Attempting to delete all users.');
+    const [nums] = await User.update({ active: false }, {
         where: {},
-        truncate: false
     });
     res.send({ message: `${nums} Users were deleted successfully!` });
+    logger.info(`${nums} users were deleted successfully.`);
 });
 
 exports.deleteAllByDeptId = catchAsync(async (req, res) => {
-    const departmentId = req.params.id
+    const departmentId = req.params.id;
+    logger.warn(`Attempting to soft-delete all users for department ID: ${departmentId}`);
 
-    const nums = await User.destroy({
+    const [nums] = await User.update({ active: false }, {
         where: { departmentId: departmentId },
-        truncate: false
     });
+    logger.info(`${nums} users from department ${departmentId} were deleted successfully.`);
     res.send({ message: `${nums} Users from department ${departmentId} were deleted successfully!` });
 });

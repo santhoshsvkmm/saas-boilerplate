@@ -2,14 +2,17 @@ var express = require('express');
 var router = express.Router();
 
 const withAuth = require('../middleware/withAuth.middleware.js')
+const { cacheMiddleware } = require("../middleware/cache.middleware.js");
+const validate = require('../middleware/validate.middleware.js');
+const { createApplication, updateApplication } = require('../validationSchemas/application.validation.js');
 
 const application = require("../controllers/application.controller.js");
 
 // Retrieve all applications
-router.get('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, application.findAll)
+router.get('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, cacheMiddleware('applications'), application.findAll)
 
 // Create a new Application
-router.post('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, application.create);
+router.post('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, validate(createApplication), application.create);
 
 //Retrieve all Application by User Id
 router.get('/user/:id', withAuth.verifyToken, application.findAllByUserId);
@@ -18,7 +21,7 @@ router.get('/user/:id', withAuth.verifyToken, application.findAllByUserId);
 router.get('/department/:id', withAuth.verifyToken, withAuth.withRoleManager, application.findAllByDeptId);
 
 //Retrieve Recent Applications (2 weeks old)
-router.get('/recent', withAuth.verifyToken, application.findAllRecent)
+router.get('/recent', withAuth.verifyToken, cacheMiddleware('applications'), application.findAllRecent)
 
 //Retrieve Recent Applications (2 weeks old) And Dept
 router.get('/recent/department/:id', withAuth.verifyToken, withAuth.withRoleManager, application.findAllRecentAndDept)
@@ -30,7 +33,7 @@ router.get('/recent/user/:id', withAuth.verifyToken, application.findAllRecentAn
 router.get('/:id', withAuth.verifyToken, application.findOne);
 
 // Update a Application with an id
-router.put('/:id', withAuth.verifyToken, withAuth.withRoleAdminOrManager, application.update);
+router.put('/:id', withAuth.verifyToken, withAuth.withRoleAdminOrManager, validate(updateApplication), application.update);
 
 // Delete all Applications
 router.delete('/', withAuth.verifyToken, withAuth.withRoleAdmin, application.deleteAll);

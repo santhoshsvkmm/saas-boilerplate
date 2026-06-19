@@ -6,6 +6,8 @@ const Op = db.Sequelize.Op;
 const moment = require('moment');
 const { department } = require("../models");
 const catchAsync = require("../utils/catchAsync");
+const logger = require('../loggers/logger');
+const { clearCacheByTag } = require('../utils/cache.util');
 
 // Create and Save a new Application
 exports.create = catchAsync(async (req, res) => {
@@ -30,12 +32,16 @@ exports.create = catchAsync(async (req, res) => {
   // Save Application in the database
 
   const data = await Application.create(application);
-  res.send(data);
+  logger.info(`Application created successfully with ID: ${data.id} for user ID: ${data.userId}`);
+  await clearCacheByTag('applications');
+  res.status(201).send(data);
 });
 
 // Retrieve all Applications from the database.
 exports.findAll = catchAsync(async (req, res) => {
+  logger.info('Retrieving all applications.');
   const data = await Application.findAll({
+    where: { isDeleted: { [Op.ne]: true } },
     include: User
   });
   res.send(data);
@@ -43,9 +49,11 @@ exports.findAll = catchAsync(async (req, res) => {
 
 // Retrieve all Applications from the database.
 exports.findAllRecent = catchAsync(async (req, res) => {
+  logger.info('Retrieving all recent applications.');
   const data = await Application.findAll({
     where: {
       [Op.and]: [
+        { isDeleted: { [Op.ne]: true } },
         {startDate: {
           [Op.gte]: moment().subtract(14, 'days').toDate()
         }},
@@ -63,10 +71,11 @@ exports.findAllRecent = catchAsync(async (req, res) => {
 
 exports.findAllRecentAndDept = catchAsync(async (req, res) => {
   const id = req.params.id
-
+  logger.info(`Retrieving all recent applications for department ID: ${id}`);
   const data = await Application.findAll({
     where: {
       [Op.and]: [
+        { isDeleted: { [Op.ne]: true } },
         {startDate: {
           [Op.gte]: moment().subtract(14, 'days').toDate()
         }},
@@ -85,10 +94,11 @@ exports.findAllRecentAndDept = catchAsync(async (req, res) => {
 
 exports.findAllRecentAndUser = catchAsync(async (req, res) => {
   const id = req.params.id
-
+  logger.info(`Retrieving all recent applications for user ID: ${id}`);
   const data = await Application.findAll({
     where: {
       [Op.and]: [
+        { isDeleted: { [Op.ne]: true } },
         {startDate: {
           [Op.gte]: moment().subtract(14, 'days').toDate()
         }},
@@ -108,8 +118,9 @@ exports.findAllRecentAndUser = catchAsync(async (req, res) => {
 //Retrieve all Applications By User Id
 exports.findAllByDeptId = catchAsync(async (req, res) => {
   const deptId = req.params.id;
-
+  logger.info(`Retrieving all applications for department ID: ${deptId}`);
   const data = await Application.findAll({
+    where: { isDeleted: { [Op.ne]: true } },
     include: [{
       model: User,
       where: {departmentId: deptId}
@@ -122,6 +133,7 @@ exports.findAllByDeptId = catchAsync(async (req, res) => {
 exports.findAllByUserId = catchAsync(async (req, res) => {
   const userId = req.params.id;
   const loggedInUserId = req.authData.user.id;
+  logger.info(`Retrieving all applications for user ID: ${userId}`);
 
   if (loggedInUserId.toString() !== userId && req.authData.user.role !== 'ROLE_ADMIN' && req.authData.user.role !== 'ROLE_MANAGER') {
     return res.status(403).send({ message: "Access denied: You are not authorized to view these applications." });
@@ -132,7 +144,7 @@ exports.findAllByUserId = catchAsync(async (req, res) => {
     include: [{
       model: User
     }],
-    where: { userId: userId } 
+    where: { userId: userId, isDeleted: { [Op.ne]: true } } 
   });
   res.send(data);
 });
@@ -140,7 +152,7 @@ exports.findAllByUserId = catchAsync(async (req, res) => {
 // Find a single Application with an id
 exports.findOne = catchAsync(async (req, res) => {
   const id = req.params.id;
-
+  logger.info(`Retrieving application with ID: ${id}`);
   const data = await Application.findByPk(id);
   res.send(data);
 });
@@ -148,12 +160,15 @@ exports.findOne = catchAsync(async (req, res) => {
 // Update a Application by the id in the request
 exports.update = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to update application with ID: ${id}`);
 
   const [num] = await Application.update(req.body, {
     where: { id: id },
   });
 
   if (num == 1) {
+    logger.info(`Application updated successfully with ID: ${id}`);
+    await clearCacheByTag('applications');
     res.send({
       message: "Application was updated successfully.",
     });
@@ -167,12 +182,15 @@ exports.update = catchAsync(async (req, res) => {
 // Delete a Application with the specified id in the request
 exports.delete = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to delete application with ID: ${id}`);
 
-  const num = await Application.destroy({
+  const [num] = await Application.update({ isDeleted: true }, {
     where: { id: id },
   });
 
   if (num == 1) {
+    logger.info(`Application deleted successfully with ID: ${id}`);
+    await clearCacheByTag('applications');
     res.send({
       message: "Application was deleted successfully!",
     });
@@ -185,20 +203,24 @@ exports.delete = catchAsync(async (req, res) => {
 
 // Delete all Applications from the database.
 exports.deleteAll = catchAsync(async (req, res) => {
-  const nums = await Application.destroy({
+  logger.warn('Attempting to delete all applications.');
+  const [nums] = await Application.update({ isDeleted: true }, {
     where: {},
-    truncate: false,
   });
+  await clearCacheByTag('applications');
+  logger.info(`${nums} applications were deleted successfully.`);
   res.send({ message: `${nums} Applications were deleted successfully!` });
 });
 
 // Delete all Applications by User Id.
 exports.deleteAllByUserId = catchAsync(async (req, res) => {
   const userId = req.params.id;
+  logger.warn(`Attempting to delete all applications for user ID: ${userId}`);
 
-  const nums = await Application.destroy({
+  const [nums] = await Application.update({ isDeleted: true }, {
     where: { userId: userId },
-    truncate: false,
   });
+  await clearCacheByTag('applications');
+  logger.info(`${nums} applications for user ID ${userId} were deleted successfully.`);
   res.send({ message: `${nums} Applications were deleted successfully!` });
 });

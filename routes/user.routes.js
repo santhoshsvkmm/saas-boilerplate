@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 const withAuth = require("../middleware/withAuth.middleware.js")
+const { cacheMiddleware } = require("../middleware/cache.middleware.js");
 
 const user = require("../controllers/user.controller.js");
 
@@ -9,7 +10,7 @@ const user = require("../controllers/user.controller.js");
 router.post('/', user.create);
 
 // Retrieve all Users
-router.get('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, user.findAll);
+router.get('/', withAuth.verifyToken, withAuth.withRoleAdminOrManager, cacheMiddleware, user.findAll);
 
 //Retreive user count
 router.get('/total', withAuth.verifyToken, withAuth.withRoleAdminOrManager, user.findTotal);

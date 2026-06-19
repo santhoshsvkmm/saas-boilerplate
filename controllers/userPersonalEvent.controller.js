@@ -2,6 +2,7 @@ const db = require("../models");
 const PersonalEvent = db.userPersonalEvent;
 const Op = db.Sequelize.Op;
 const catchAsync = require("../utils/catchAsync");
+const logger = require('../loggers/logger');
 
 // Create and Save a new PersonalEvent
 exports.create = catchAsync(async (req, res) => {
@@ -24,12 +25,16 @@ exports.create = catchAsync(async (req, res) => {
 
   // Save PersonalEvent in the database
   const data = await PersonalEvent.create(personalEvent);
+  logger.info(`Personal event created successfully with ID: ${data.id} for user ID: ${data.userId}`);
   res.send(data);
 });
 
 // Retrieve all Personal Events from the database.
 exports.findAll = catchAsync(async (req, res) => {
-  const data = await PersonalEvent.findAll();
+  logger.info('Retrieving all personal events.');
+  const data = await PersonalEvent.findAll({
+    where: { isDeleted: { [Op.ne]: true } }
+  });
   res.send(data);
 });
 
@@ -42,13 +47,17 @@ exports.findAllByUserId = catchAsync(async (req, res) => {
       return res.status(403).send({ message: "Access denied." });
     }
 
-    const data = await PersonalEvent.findAll({where: {userId: userId}});
+    logger.info(`Retrieving all personal events for user ID: ${userId}`);
+    const data = await PersonalEvent.findAll({
+      where: {userId: userId, isDeleted: { [Op.ne]: true }}
+    });
     res.send(data);
 });
 
 // Find a single PersonalEvent with an id
 exports.findOne = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Retrieving personal event with ID: ${id}`);
 
   const data = await PersonalEvent.findByPk(id);
   res.send(data);
@@ -57,12 +66,14 @@ exports.findOne = catchAsync(async (req, res) => {
 // Update an PersonalEvent by the id in the request
 exports.update = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to update personal event with ID: ${id}`);
 
   const [num] = await PersonalEvent.update(req.body, {
     where: { id: id }
   });
 
   if (num == 1) {
+    logger.info(`Personal event updated successfully with ID: ${id}`);
     res.send({
       message: "PersonalEvent was updated successfully."
     });
@@ -76,12 +87,14 @@ exports.update = catchAsync(async (req, res) => {
 // Delete an PersonalEvent with the specified id in the request
 exports.delete = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to delete personal event with ID: ${id}`);
 
-  const num = await PersonalEvent.destroy({
+  const [num] = await PersonalEvent.update({ isDeleted: true }, {
     where: { id: id }
   });
 
   if (num == 1) {
+    logger.info(`Personal event deleted successfully with ID: ${id}`);
     res.send({
       message: "PersonalEvent was deleted successfully!"
     });
@@ -94,20 +107,22 @@ exports.delete = catchAsync(async (req, res) => {
 
 // Delete all Personal Events from the database.
 exports.deleteAll = catchAsync(async (req, res) => {
-  const nums = await PersonalEvent.destroy({
+  logger.warn('Attempting to delete all personal events.');
+  const [nums] = await PersonalEvent.update({ isDeleted: true }, {
     where: {},
-    truncate: false
   });
+  logger.info(`${nums} personal events were deleted successfully.`);
   res.send({ message: `${nums} Personal Events were deleted successfully!` });
 });
 
 // Delete all Personal Events by User Id.
 exports.deleteAllByUserId = catchAsync(async (req, res) => {
     const userId = req.params.id;
+    logger.warn(`Attempting to delete all personal events for user ID: ${userId}`);
 
-    const nums = await PersonalEvent.destroy({
+    const [nums] = await PersonalEvent.update({ isDeleted: true }, {
       where: {userId: userId},
-      truncate: false
     });
+    logger.info(`${nums} personal events for user ID ${userId} were deleted successfully.`);
     res.send({ message: `${nums} Personal Events were deleted successfully!` });
 });

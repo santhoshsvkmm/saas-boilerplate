@@ -1,15 +1,16 @@
 const db = require("../models");
 const Message = db.userMessage;
 const Op = db.Sequelize.Op;
+const catchAsync = require("../utils/catchAsync");
+const logger = require('../loggers/logger');
 
 // Create and Save a new Message
-exports.create = (req, res) => {
+exports.create = catchAsync(async (req, res) => {
   // Validate request
   if (!req.body) {
-    res.status(400).send({
+    return res.status(400).send({
       message: "Content can not be empty!"
     });
-    return;
   }
 
   // Create a Message
@@ -20,145 +21,98 @@ exports.create = (req, res) => {
   };
 
   // Save Message in the database
-  Message.create(message)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Message."
-      });
-    });
-};
+  const data = await Message.create(message);
+  logger.info(`Message created successfully with ID: ${data.id}`);
+  res.status(201).send(data);
+});
 
 // Retrieve all Messages from the database.
-exports.findAll = (req, res) => {
-  Message.findAll()
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving messages."
-      });
-    });
-};
+exports.findAll = catchAsync(async (req, res) => {
+  logger.info('Retrieving all messages.');
+  const data = await Message.findAll({
+    where: { isDeleted: { [Op.ne]: true } }
+  });
+  res.send(data);
+});
 
 //Retrieve all Messages By User Id
-exports.findAllByUserId = (req, res) => {
-    const userId = req.params.id
-
-    Message.findAll({where: {senderId: userId}})
-      .then(data => {
-        res.send(data);
-      })
-      .catch(err => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while retrieving messages."
-        });
-      });
-  };
+exports.findAllByUserId = catchAsync(async (req, res) => {
+  const userId = req.params.id;
+  logger.info(`Retrieving all messages for sender ID: ${userId}`);
+  const data = await Message.findAll({ 
+    where: { senderId: userId, isDeleted: { [Op.ne]: true } } 
+  });
+  res.send(data);
+});
 
 // Find a single Message with an id
-exports.findOne = (req, res) => {
+exports.findOne = catchAsync(async (req, res) => {
   const id = req.params.id;
-
-  Message.findByPk(id)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error retrieving Message with id=" + id
-      });
-    });
-};
+  logger.info(`Retrieving message with ID: ${id}`);
+  const data = await Message.findByPk(id);
+  res.send(data);
+});
 
 // Update an Message by the id in the request
-exports.update = (req, res) => {
+exports.update = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to update message with ID: ${id}`);
 
-  Message.update(req.body, {
+  const [num] = await Message.update(req.body, {
     where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "Message was updated successfully."
-        });
-      } else {
-        res.send({
-          message: `Cannot update Message with id=${id}. Maybe Message was not found or req.body is empty!`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error updating Message with id=" + id
-      });
+  });
+
+  if (num == 1) {
+    logger.info(`Message updated successfully with ID: ${id}`);
+    res.send({
+      message: "Message was updated successfully."
     });
-};
+  } else {
+    res.send({
+      message: `Cannot update Message with id=${id}. Maybe Message was not found or req.body is empty!`
+    });
+  }
+});
 
 // Delete an Message with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = catchAsync(async (req, res) => {
   const id = req.params.id;
+  logger.info(`Attempting to delete message with ID: ${id}`);
 
-  Message.destroy({
+  const [num] = await Message.update({ isDeleted: true }, {
     where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "Message was deleted successfully!"
-        });
-      } else {
-        res.send({
-          message: `Cannot delete Message with id=${id}. Maybe Tutorial was not found!`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Could not delete Message with id=" + id
-      });
+  });
+
+  if (num == 1) {
+    logger.info(`Message deleted successfully with ID: ${id}`);
+    res.send({
+      message: "Message was deleted successfully!"
     });
-};
+  } else {
+    res.send({
+      message: `Cannot delete Message with id=${id}. Maybe Message was not found!`
+    });
+  }
+});
 
 // Delete all Messages from the database.
-exports.deleteAll = (req, res) => {
-  Message.destroy({
+exports.deleteAll = catchAsync(async (req, res) => {
+  logger.warn('Attempting to delete all messages.');
+  const [nums] = await Message.update({ isDeleted: true }, {
     where: {},
-    truncate: false
-  })
-    .then(nums => {
-      res.send({ message: `${nums} Messages were deleted successfully!` });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all Messages."
-      });
-    });
-};
+  });
+  logger.info(`${nums} messages were deleted successfully.`);
+  res.send({ message: `${nums} Messages were deleted successfully!` });
+});
 
 // Delete all Messages by User Id.
-exports.deleteAllByUserId = (req, res) => {
+exports.deleteAllByUserId = catchAsync(async (req, res) => {
     const organizationdId = req.params.id;
+    logger.warn(`Attempting to delete all messages for organisation ID: ${organizationdId}`);
 
-    Message.destroy({
+    const [nums] = await Message.update({ isDeleted: true }, {
       where: {organizationId: organizationdId},
-      truncate: false
-    })
-      .then(nums => {
-        res.send({ message: `${nums} Messages were deleted successfully!` });
-      })
-      .catch(err => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while removing all Messages."
-        });
-      });
-  };
+    });
+    logger.info(`${nums} messages for organisation ID ${organizationdId} were deleted successfully.`);
+    res.send({ message: `${nums} Messages were deleted successfully!` });
+});
